@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kcp-dev/logicalcluster"
 	"github.com/stretchr/testify/require"
@@ -31,10 +32,12 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 
 	apisv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1"
 	kcpclientset "github.com/kcp-dev/kcp/pkg/client/clientset/versioned"
+	"github.com/kcp-dev/kcp/test/e2e/framework"
 )
 
 // NewSheriffsCRDWithSchemaDescription returns a minimal sheriffs CRD in the API group specified with the description
@@ -146,18 +149,16 @@ func CreateSheriffsSchemaAndExport(
 	require.NoError(t, err, "error creating APIExport %s|%s", clusterName, export.Name)
 }
 
-// CreateSheriff creates an instance of a Sheriff CustomResource in the logical cluster identified by clusterName, in
+// createSheriff creates an instance of a Sheriff CustomResource in the logical cluster identified by clusterName, in
 // the specific API group, and with the specified name.
-func CreateSheriff(
+func createSheriff(
 	ctx context.Context,
 	t *testing.T,
 	dynamicClusterClient dynamic.ClusterInterface,
 	clusterName logicalcluster.Name,
 	group, name string,
-) {
+) error {
 	name = strings.Replace(name, ":", "-", -1)
-
-	t.Logf("Creating %s/v1 sheriffs %s|default/%s", group, clusterName, name)
 
 	sheriffsGVR := schema.GroupVersionResource{Group: group, Resource: "sheriffs", Version: "v1"}
 
@@ -171,7 +172,51 @@ func CreateSheriff(
 		},
 	}, metav1.CreateOptions{})
 
+	return err
+}
+
+// CreateSheriff creates an instance of a Sheriff CustomResource in the logical cluster identified by clusterName, in
+// the specific API group, and with the specified name. It expects the creation to succeed.
+func CreateSheriff(
+	ctx context.Context,
+	t *testing.T,
+	dynamicClusterClient dynamic.ClusterInterface,
+	clusterName logicalcluster.Name,
+	group, name string,
+) {
+	t.Logf("Creating %s/v1 sheriffs %s|default/%s", group, clusterName, name)
+	err := createSheriff(ctx, t, dynamicClusterClient, clusterName, group, name)
 	require.NoError(t, err, "failed to create sheriff %s|default/%s", clusterName, name)
+}
+
+// CreateSheriffAndExpectError tries to create an instance of a Sheriff CustomResource in the logical cluster identified
+// by clusterName, in the specific API group, and with the specified name. It expects the creation to fail.
+func CreateSheriffAndExpectError(
+	ctx context.Context,
+	t *testing.T,
+	dynamicClusterClient dynamic.ClusterInterface,
+	clusterName logicalcluster.Name,
+	group, name string,
+) {
+	t.Logf("Creating %s/v1 sheriffs %s|default/%s", group, clusterName, name)
+	err := createSheriff(ctx, t, dynamicClusterClient, clusterName, group, name)
+	require.Error(t, err, "expected error creating sheriff %s|default/%s", clusterName, name)
+}
+
+func EventuallyCreateSheriff(
+	ctx context.Context,
+	t *testing.T,
+	dynamicClusterClient dynamic.ClusterInterface,
+	clusterName logicalcluster.Name,
+	group, name string,
+) {
+	t.Logf("Creating %s/v1 sheriffs %s|default/%s", group, clusterName, name)
+	framework.Eventually(t, func() (bool, string) {
+		if err := createSheriff(ctx, t, dynamicClusterClient, clusterName, group, name); err != nil {
+			return false, err.Error()
+		}
+		return true, ""
+	}, wait.ForeverTestTimeout, 100*time.Millisecond, "failed to eventually create sheriff")
 }
 
 func jsonOrDie(obj interface{}) []byte {
