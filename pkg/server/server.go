@@ -56,6 +56,7 @@ import (
 	kcpexternalversions "github.com/kcp-dev/kcp/pkg/client/informers/externalversions"
 	"github.com/kcp-dev/kcp/pkg/etcd"
 	kcpfeatures "github.com/kcp-dev/kcp/pkg/features"
+	"github.com/kcp-dev/kcp/pkg/indexers"
 	"github.com/kcp-dev/kcp/pkg/informer"
 	metadataclient "github.com/kcp-dev/kcp/pkg/metadata"
 	kcpserveroptions "github.com/kcp-dev/kcp/pkg/server/options"
@@ -86,9 +87,10 @@ type Server struct {
 
 	syncedCh chan struct{}
 
-	kcpSharedInformerFactory           kcpexternalversions.SharedInformerFactory
-	kubeSharedInformerFactory          coreexternalversions.SharedInformerFactory
-	apiextensionsSharedInformerFactory apiextensionsexternalversions.SharedInformerFactory
+	kcpSharedInformerFactory              kcpexternalversions.SharedInformerFactory
+	kubeSharedInformerFactory             coreexternalversions.SharedInformerFactory
+	apiextensionsSharedInformerFactory    apiextensionsexternalversions.SharedInformerFactory
+	dynamicDiscoverySharedInformerFactory *informer.DynamicDiscoverySharedInformerFactory
 
 	// TODO(sttts): get rid of these. We have wildcard informers already.
 	rootKcpSharedInformerFactory  kcpexternalversions.SharedInformerFactory
@@ -150,7 +152,12 @@ func (s *Server) Run(ctx context.Context) error {
 		return err
 	}
 	kcpClient := kcpClusterClient.Cluster(logicalcluster.Wildcard)
-	s.kcpSharedInformerFactory = kcpexternalversions.NewSharedInformerFactoryWithOptions(kcpClient, resyncPeriod)
+	s.kcpSharedInformerFactory = kcpexternalversions.NewSharedInformerFactoryWithOptions(
+		kcpClient,
+		resyncPeriod,
+		kcpexternalversions.WithExtraClusterScopedIndexers(indexers.ClusterScoped()),
+		kcpexternalversions.WithExtraNamespaceScopedIndexers(indexers.NamespaceScoped()),
+	)
 
 	// Setup kube * informers
 	kubeClusterClient, err := kubernetes.NewClusterForConfig(genericConfig.LoopbackClientConfig)
@@ -158,7 +165,12 @@ func (s *Server) Run(ctx context.Context) error {
 		return err
 	}
 	kubeClient := kubeClusterClient.Cluster(logicalcluster.Wildcard)
-	s.kubeSharedInformerFactory = coreexternalversions.NewSharedInformerFactoryWithOptions(kubeClient, resyncPeriod)
+	s.kubeSharedInformerFactory = coreexternalversions.NewSharedInformerFactoryWithOptions(
+		kubeClient,
+		resyncPeriod,
+		coreexternalversions.WithExtraClusterScopedIndexers(indexers.ClusterScoped()),
+		coreexternalversions.WithExtraNamespaceScopedIndexers(indexers.NamespaceScoped()),
+	)
 
 	// Setup apiextensions * informers
 	apiextensionsClusterClient, err := apiextensionsclient.NewClusterForConfig(genericConfig.LoopbackClientConfig)
@@ -166,11 +178,22 @@ func (s *Server) Run(ctx context.Context) error {
 		return err
 	}
 	apiextensionsCrossClusterClient := apiextensionsClusterClient.Cluster(logicalcluster.Wildcard)
-	s.apiextensionsSharedInformerFactory = apiextensionsexternalversions.NewSharedInformerFactoryWithOptions(apiextensionsCrossClusterClient, resyncPeriod)
+	s.apiextensionsSharedInformerFactory = apiextensionsexternalversions.NewSharedInformerFactoryWithOptions(
+		apiextensionsCrossClusterClient,
+		resyncPeriod,
+		apiextensionsexternalversions.WithExtraClusterScopedIndexers(indexers.ClusterScoped()),
+		apiextensionsexternalversions.WithExtraNamespaceScopedIndexers(indexers.NamespaceScoped()),
+	)
 
 	// Setup root informers
-	s.rootKcpSharedInformerFactory = kcpexternalversions.NewSharedInformerFactoryWithOptions(kcpClusterClient.Cluster(v1alpha1.RootCluster), resyncPeriod)
-	s.rootKubeSharedInformerFactory = coreexternalversions.NewSharedInformerFactoryWithOptions(kubeClusterClient.Cluster(v1alpha1.RootCluster), resyncPeriod)
+	s.rootKcpSharedInformerFactory = kcpexternalversions.NewSharedInformerFactoryWithOptions(
+		kcpClusterClient.Cluster(v1alpha1.RootCluster),
+		resyncPeriod,
+	)
+	s.rootKubeSharedInformerFactory = coreexternalversions.NewSharedInformerFactoryWithOptions(
+		kubeClusterClient.Cluster(v1alpha1.RootCluster),
+		resyncPeriod,
+	)
 
 	// Setup dynamic client
 	dynamicClusterClient, err := dynamic.NewClusterForConfig(genericConfig.LoopbackClientConfig)
@@ -333,13 +356,13 @@ func (s *Server) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	ddsif := informer.NewDynamicDiscoverySharedInformerFactory(
+	s.dynamicDiscoverySharedInformerFactory = informer.NewDynamicDiscoverySharedInformerFactory(
 		s.kcpSharedInformerFactory.Tenancy().V1alpha1().ClusterWorkspaces().Lister(),
 		kubeClusterClient.DiscoveryClient,
 		metadataClusterClient.Cluster(logicalcluster.Wildcard),
 		func(obj interface{}) bool { return true }, s.options.Extra.DiscoveryPollInterval,
 	)
-	if err := ddsif.AddIndexers(cache.Indexers{byWorkspace: indexByWorkspace}); err != nil {
+	if err := s.dynamicDiscoverySharedInformerFactory.AddIndexers(indexers.NamespaceScoped()); err != nil {
 		return err
 	}
 
@@ -375,7 +398,7 @@ func (s *Server) Run(ctx context.Context) error {
 		klog.Infof("Finished start kcp informers")
 
 		klog.Infof("Starting dynamic metadata informer")
-		ddsif.Start(goContext(ctx))
+		s.dynamicDiscoverySharedInformerFactory.Start(goContext(ctx))
 
 		// bootstrap root workspace with workspace shard
 		servingCert, _ := server.SecureServingInfo.Cert.CurrentCertKeyContent()
@@ -468,7 +491,7 @@ func (s *Server) Run(ctx context.Context) error {
 	}
 
 	if s.options.Controllers.EnableAll || enabled.Has("resource-scheduler") {
-		if err := s.installWorkloadResourceScheduler(ctx, controllerConfig, ddsif); err != nil {
+		if err := s.installWorkloadResourceScheduler(ctx, controllerConfig); err != nil {
 			return err
 		}
 	}
