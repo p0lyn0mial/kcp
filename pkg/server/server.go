@@ -161,6 +161,23 @@ func (s *Server) Run(ctx context.Context) error {
 		kcpexternalversions.WithExtraNamespaceScopedIndexers(indexers.NamespaceScoped()),
 	)
 
+	s.kcpSharedInformerFactory.Apis().V1alpha1().APIBindings().Informer().AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				key, _ := cache.MetaNamespaceKeyFunc(obj)
+				klog.Infof("ANDY global apibinding add %s", key)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				key, _ := cache.MetaNamespaceKeyFunc(newObj)
+				klog.Infof("ANDY global apibinding update %s", key)
+			},
+			DeleteFunc: func(obj interface{}) {
+				key, _ := cache.MetaNamespaceKeyFunc(obj)
+				klog.Infof("ANDY global apibinding delete %s", key)
+			},
+		},
+	)
+
 	// Setup kube * informers
 	kubeClusterClient, err := kubernetes.NewClusterForConfig(genericConfig.LoopbackClientConfig)
 	if err != nil {

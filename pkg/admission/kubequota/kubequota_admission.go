@@ -23,6 +23,7 @@ import (
 	"sync"
 
 	"github.com/kcp-dev/logicalcluster"
+	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/apiserver/pkg/admission"
 	"k8s.io/apiserver/pkg/admission/initializer"
@@ -313,6 +314,12 @@ func (k *KubeResourceQuota) SetExternalKubeInformerFactory(informers informers.S
 	k.kubeInformers = informers
 	// Make sure the quota informer gets started
 	_ = informers.Core().V1().ResourceQuotas().Informer()
+
+	informers.Core().V1().ResourceQuotas().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			klog.Infof("ANDY oldObj=%#v, newObj=%#v", oldObj, newObj)
+		},
+	})
 }
 
 func (k *KubeResourceQuota) SetQuotaConfiguration(quotaConfiguration quota.Configuration) {

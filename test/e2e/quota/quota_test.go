@@ -286,12 +286,21 @@ func TestKubeQuotaCoreV1TypesFromBinding(t *testing.T) {
 
 		used := quota.Status.Used["count/services"]
 		return used.Equal(resource.MustParse("0")), used.String()
-	}, wait.ForeverTestTimeout, 100*time.Millisecond, "error waiting for 0 used Services")
+	}, 7*time.Second, 100*time.Millisecond, "error waiting for 0 used Services")
 
 	service1 := &corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: "service1"}}
 	t.Logf("Creating Service service1")
+	// framework.Eventually(t, func() (bool, string) {
+	// 	_, err = kubeClusterClient.Cluster(userClusterName).CoreV1().Services("default").Create(ctx, service1, metav1.CreateOptions{})
+	// 	if err != nil {
+	// 		t.Logf("ANDY %v", err)
+	// 		return false, err.Error()
+	// 	}
+	//
+	// 	return true, ""
+	// }, wait.ForeverTestTimeout, 100*time.Millisecond, "error creating service1")
 	_, err = kubeClusterClient.Cluster(userClusterName).CoreV1().Services("default").Create(ctx, service1, metav1.CreateOptions{})
-	require.NoError(t, err, "error creating Service service1")
+	require.NoError(t, err)
 
 	t.Logf("Waiting for quota to show 1 used Service")
 	framework.Eventually(t, func() (bool, string) {
@@ -302,7 +311,7 @@ func TestKubeQuotaCoreV1TypesFromBinding(t *testing.T) {
 
 		used := quota.Status.Used["count/services"]
 		return used.Equal(resource.MustParse("1")), used.String()
-	}, wait.ForeverTestTimeout, 100*time.Millisecond, "error waiting for 0 used Services")
+	}, wait.ForeverTestTimeout, 100*time.Millisecond, "error waiting for 1 used Services")
 
 	service2 := &corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: "service2"}}
 	t.Logf("Creating Service service2 - expect quota rejection")

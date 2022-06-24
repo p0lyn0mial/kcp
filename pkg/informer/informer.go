@@ -107,20 +107,31 @@ func (d *DynamicDiscoverySharedInformerFactory) informerForResourceLockHeld(gvr 
 		nil,
 	)
 
+	l := func(s string, o interface{}) {
+		if gvr.Resource != "apibindings" {
+			return
+		}
+		key, _ := cache.MetaNamespaceKeyFunc(o)
+		klog.Infof("ANDY ddsif global %s %s %s", s, gvr.GroupResource().String(), key)
+	}
+
 	inf.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: d.filterFunc,
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
+				l("add", obj)
 				for _, h := range d.handlers {
 					h.OnAdd(gvr, obj)
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
+				l("update", newObj)
 				for _, h := range d.handlers {
 					h.OnUpdate(gvr, oldObj, newObj)
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
+				l("delete", obj)
 				for _, h := range d.handlers {
 					h.OnDelete(gvr, obj)
 				}

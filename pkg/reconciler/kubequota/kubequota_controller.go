@@ -315,7 +315,12 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 	resourceQuotaControllerClient := c.kubeClusterClient.Cluster(clusterName)
 	resourceQuotaControllerDiscoveryClient := resourceQuotaControllerClient.Discovery()
 
-	discoveryFunc := resourceQuotaControllerDiscoveryClient.ServerPreferredNamespacedResources
+	discoveryFunc := func() ([]*metav1.APIResourceList, error) {
+		klog.Infof("ANDY discovery for %v: executing", clusterName)
+		ret, err := resourceQuotaControllerDiscoveryClient.ServerPreferredNamespacedResources()
+		klog.Infof("ANDY discovery for %v: got %#v, err=%v", clusterName, ret, err)
+		return ret, err
+	}
 
 	scopedInformerFactory := &scopedGenericSharedInformerFactory{
 		delegate:               c.informerFactoryForQuota,
@@ -372,7 +377,7 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 
 		stop, ok := c.discoveryStops[clusterName]
 		if ok {
-			klog.V(2).InfoS("Stopping quota discovery Sync goroutine", "clusterName", clusterName)
+			klog.InfoS("Stopping quota discovery Sync goroutine", "clusterName", clusterName)
 			close(stop)
 		}
 
@@ -380,9 +385,10 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 		c.discoveryStops[clusterName] = stop
 
 		// Cache discovery - this won't potentially change unless/until another APIBinding/CRD watch event comes in
+		klog.Infof("ANDY resetDiscovery for %v", clusterName)
 		apis, err := discoveryFunc()
 
-		klog.V(2).InfoS("Starting quota discovery Sync goroutine", "clusterName", clusterName)
+		klog.InfoS("Starting quota discovery Sync goroutine", "clusterName", clusterName)
 		go resourceQuotaController.Sync(
 			// Return the cached discovery data + error
 			func() ([]*metav1.APIResourceList, error) {
@@ -395,16 +401,24 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 	}
 
 	// Shared event handler
-	rediscover := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(_ interface{}) {
-			resetDiscovery()
-		},
-		UpdateFunc: func(_, _ interface{}) {
-			resetDiscovery()
-		},
-		DeleteFunc: func(_ interface{}) {
-			resetDiscovery()
-		},
+	rediscover := func(r string) cache.ResourceEventHandlerFuncs {
+		return cache.ResourceEventHandlerFuncs{
+			AddFunc: func(o interface{}) {
+				key, _ := cache.MetaNamespaceKeyFunc(o)
+				klog.Infof("ANDY got add event for %q %s", r, key)
+				resetDiscovery()
+			},
+			UpdateFunc: func(_, o interface{}) {
+				key, _ := cache.MetaNamespaceKeyFunc(o)
+				klog.Infof("ANDY got update event for %q %s", r, key)
+				resetDiscovery()
+			},
+			DeleteFunc: func(o interface{}) {
+				key, _ := cache.MetaNamespaceKeyFunc(o)
+				klog.Infof("ANDY got delete event for %q %s", r, key)
+				resetDiscovery()
+			},
+		}
 	}
 
 	// Add the handler for CRDs
@@ -413,7 +427,8 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 	if err != nil {
 		return err
 	}
-	crdInformer.Informer().AddEventHandler(rediscover)
+	klog.Infof("ANDY startQuotaForClusterWorkspace adding crd event handler")
+	crdInformer.Informer().AddEventHandler(rediscover("crd"))
 
 	// Add the handler for APIBindings
 	apibindingsGVR := apisv1alpha1.SchemeGroupVersion.WithResource("apibindings")
@@ -421,7 +436,8 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 	if err != nil {
 		return err
 	}
-	apiBindingsInformer.Informer().AddEventHandler(rediscover)
+	klog.Infof("ANDY startQuotaForClusterWorkspace adding binding event handler")
+	apiBindingsInformer.Informer().AddEventHandler(rediscover("binding"))
 
 	return nil
 }

@@ -847,8 +847,8 @@ func (s *Server) installKubeQuotaController(ctx context.Context, config *rest.Co
 	// TODO(ncdc): should we make these configurable?
 	// TODO(ncdc): see if these are interpreted correctly from upstream.
 	const (
-		quotaResyncPeriod        = 5 * time.Minute
-		replenishmentPeriod      = 12 * time.Hour
+		quotaResyncPeriod        = 0 // 5 * time.Minute
+		replenishmentPeriod      = 0 // 12 * time.Hour
 		workersPerLogicalCluster = 1
 	)
 
