@@ -318,7 +318,13 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 	discoveryFunc := func() ([]*metav1.APIResourceList, error) {
 		klog.Infof("ANDY discovery for %v: executing", clusterName)
 		ret, err := resourceQuotaControllerDiscoveryClient.ServerPreferredNamespacedResources()
-		klog.Infof("ANDY discovery for %v: got %#v, err=%v", clusterName, ret, err)
+		gvk := []string{}
+		for _, r := range ret {
+			for _, a := range r.APIResources {
+				gvk = append(gvk, fmt.Sprintf("name = %v, group = %v, kind = %v, version = %v", a.Name, a.Group, a.Kind, a.Version))
+			}
+		}
+		klog.Infof("ANDY discovery for %v: got %#v, err=%v", clusterName, gvk, err)
 		return ret, err
 	}
 
@@ -351,6 +357,7 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 		IgnoredResourcesFunc: quotaConfiguration.IgnoredResources,
 		InformersStarted:     c.informersStarted,
 		Registry:             generic.NewRegistry(quotaConfiguration.Evaluators()),
+		//ClusterName:          clusterName.String(),
 	}
 	if resourceQuotaControllerClient.CoreV1().RESTClient().GetRateLimiter() != nil {
 		if err := ratelimiter.RegisterMetricAndTrackRateLimiterUsage(clusterName.String()+"-resource_quota_controller", resourceQuotaControllerClient.CoreV1().RESTClient().GetRateLimiter()); err != nil {
@@ -363,6 +370,7 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 		return err
 	}
 
+	//resourceQuotaController.ClusterName = clusterName.String()
 	go resourceQuotaController.Run(ctx, c.workersPerLogicalCluster)
 
 	// Here we diverge from what upstream does. Upstream starts a goroutine that retrieves discovery every 30 seconds,
@@ -388,7 +396,7 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 		klog.Infof("ANDY resetDiscovery for %v", clusterName)
 		apis, err := discoveryFunc()
 
-		klog.InfoS("Starting quota discovery Sync goroutine", "clusterName", clusterName)
+		klog.Infof("Starting quota discovery Sync goroutine, clusterName = %v", clusterName)
 		go resourceQuotaController.Sync(
 			// Return the cached discovery data + error
 			func() ([]*metav1.APIResourceList, error) {
