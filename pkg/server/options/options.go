@@ -116,7 +116,7 @@ func NewOptions() *Options {
 	o.GenericControlPlane.Admission.RecommendedPluginOrder = kcpadmission.AllOrderedPlugins
 
 	// turn on the watch cache
-	o.GenericControlPlane.Etcd.EnableWatchCache = true
+	o.GenericControlPlane.Etcd.EnableWatchCache = false
 
 	return o
 }
