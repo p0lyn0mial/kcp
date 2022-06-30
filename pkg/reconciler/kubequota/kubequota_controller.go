@@ -316,6 +316,7 @@ func (c *Controller) startQuotaForClusterWorkspace(ctx context.Context, clusterN
 	resourceQuotaControllerDiscoveryClient := resourceQuotaControllerClient.Discovery()
 
 	discoveryFunc := func() ([]*metav1.APIResourceList, error) {
+		time.Sleep(5 * time.Second)
 		klog.Infof("ANDY discovery for %v: executing", clusterName)
 		ret, err := resourceQuotaControllerDiscoveryClient.ServerPreferredNamespacedResources()
 		gvk := []string{}
