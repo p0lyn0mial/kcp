@@ -18,6 +18,8 @@ package server
 
 import (
 	"errors"
+	"github.com/kcp-dev/kcp/pkg/cache/client/shard"
+	"k8s.io/client-go/rest"
 	"net/http"
 	"net/url"
 	"time"
@@ -39,9 +41,9 @@ import (
 	"k8s.io/apiserver/pkg/util/webhook"
 	"k8s.io/kubernetes/pkg/genericcontrolplane/clientutils"
 
+	cacheclient "github.com/kcp-dev/kcp/pkg/cache/client"
 	cacheserveroptions "github.com/kcp-dev/kcp/pkg/cache/server/options"
 	"github.com/kcp-dev/kcp/pkg/embeddedetcd"
-	kcpserver "github.com/kcp-dev/kcp/pkg/server"
 )
 
 const resyncPeriod = 10 * time.Hour
@@ -112,8 +114,15 @@ func NewConfig(opts *cacheserveroptions.CompletedOptions) (*Config, error) {
 	if err := opts.Etcd.ApplyTo(&serverConfig.Config); err != nil {
 		return nil, err
 	}
-	if err := opts.SecureServing.ApplyTo(&serverConfig.Config.SecureServing, &serverConfig.Config.LoopbackClientConfig); err != nil {
-		return nil, err
+	if opts.LoopbackClientConfig == nil {
+		if err := opts.SecureServing.ApplyTo(&serverConfig.Config.SecureServing, &serverConfig.Config.LoopbackClientConfig); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := opts.SecureServing.ApplyTo(&serverConfig.Config.SecureServing, nil); err != nil {
+			return nil, err
+		}
+		serverConfig.LoopbackClientConfig = rest.CopyConfig(opts.LoopbackClientConfig)
 	}
 	if err := opts.Authentication.ApplyTo(&serverConfig.Config.Authentication, serverConfig.SecureServing, serverConfig.OpenAPIConfig); err != nil {
 		return nil, err
@@ -129,11 +138,12 @@ func NewConfig(opts *cacheserveroptions.CompletedOptions) (*Config, error) {
 	serverConfig.Config.BuildHandlerChainFunc = func(apiHandler http.Handler, genericConfig *genericapiserver.Config) (secure http.Handler) {
 		apiHandler = genericapiserver.DefaultBuildHandlerChainFromAuthz(apiHandler, genericConfig)
 		apiHandler = genericapiserver.DefaultBuildHandlerChainBeforeAuthz(apiHandler, genericConfig)
-		apiHandler = kcpserver.WithClusterAnnotation(apiHandler)
-		apiHandler = kcpserver.WithClusterScope(apiHandler)
-		apiHandler = kcpserver.WithAcceptHeader(apiHandler)
-		apiHandler = kcpserver.WithUserAgent(apiHandler)
+		apiHandler = WithClusterAnnotation(apiHandler)
+		apiHandler = WithClusterScope(apiHandler)
+		apiHandler = WithAcceptHeader(apiHandler)
+		apiHandler = WithUserAgent(apiHandler)
 		apiHandler = WithShardScope(apiHandler)
+		apiHandler = WithServiceScope(apiHandler)
 		return apiHandler
 	}
 
@@ -154,6 +164,8 @@ func NewConfig(opts *cacheserveroptions.CompletedOptions) (*Config, error) {
 	serverConfig.LoopbackClientConfig.DisableCompression = true
 	clientutils.EnableMultiCluster(serverConfig.LoopbackClientConfig, &serverConfig.Config, "namespaces", "apiservices", "customresourcedefinitions", "clusterroles", "clusterrolebindings", "roles", "rolebindings", "serviceaccounts", "secrets")
 
+	cacheclient.WithShardRoundTripper(serverConfig.LoopbackClientConfig)
+	cacheclient.WithDefaultShardRoundTripper(serverConfig.LoopbackClientConfig, shard.Wildcard)
 	// TODO: the extension client could be shard-aware
 	//      for now the shard name is implicit and assigned
 	//      by the WithShardScope to "cache"
@@ -184,6 +196,77 @@ func NewConfig(opts *cacheserveroptions.CompletedOptions) (*Config, error) {
 
 	return c, nil
 }
+
+/*func createCacheServerConfig(rootAPIServerConfig genericapiserver.Config) (*Config, error) {
+	// make a shallow copy to let us twiddle a few things
+	serverConfig := rootAPIServerConfig
+
+	serverConfig.Authentication = nil
+	serverConfig.Authentication = nil
+
+	serverConfig.BuildHandlerChainFunc = func(apiHandler http.Handler, genericConfig *genericapiserver.Config) (secure http.Handler) {
+		apiHandler = genericapiserver.DefaultBuildHandlerChainFromAuthz(apiHandler, genericConfig)
+		apiHandler = genericapiserver.DefaultBuildHandlerChainBeforeAuthz(apiHandler, genericConfig)
+		apiHandler = WithClusterAnnotation(apiHandler)
+		apiHandler = WithClusterScope(apiHandler)
+		apiHandler = WithAcceptHeader(apiHandler)
+		apiHandler = WithUserAgent(apiHandler)
+		apiHandler = WithShardScope(apiHandler)
+		return apiHandler
+	}
+
+	opts.Etcd.StorageConfig.Paging = utilfeature.DefaultFeatureGate.Enabled(features.APIListChunking)
+	// this is where the true decodable levels come from.
+	opts.Etcd.StorageConfig.Codec = apiextensionsapiserver.Codecs.LegacyCodec(apiextensionsv1beta1.SchemeGroupVersion, apiextensionsv1.SchemeGroupVersion)
+	// prefer the more compact serialization (v1beta1) for storage until http://issue.k8s.io/82292 is resolved for objects whose v1 serialization is too big but whose v1beta1 serialization can be stored
+	opts.Etcd.StorageConfig.EncodeVersioner = runtime.NewMultiGroupVersioner(apiextensionsv1beta1.SchemeGroupVersion, schema.GroupKind{Group: apiextensionsv1beta1.GroupName})
+	serverConfig.RESTOptionsGetter = &genericoptions.SimpleRestOptionsFactory{Options: *opts.Etcd}
+
+	// use protobufs for self-communication.
+	// Since not every generic apiserver has to support protobufs, we
+	// cannot default to it in generic apiserver and need to explicitly
+	// set it in kube-apiserver.
+	serverConfig.LoopbackClientConfig.ContentConfig.ContentType = "application/vnd.kubernetes.protobuf"
+	// disable compression for self-communication, since we are going to be
+	// on a fast local network
+	serverConfig.LoopbackClientConfig.DisableCompression = true
+	clientutils.EnableMultiCluster(serverConfig.LoopbackClientConfig, &serverConfig, "namespaces", "apiservices", "customresourcedefinitions", "clusterroles", "clusterrolebindings", "roles", "rolebindings", "serviceaccounts", "secrets")
+
+	// TODO: the extension client could be shard-aware
+	//      for now the shard name is implicit and assigned
+	//      by the WithShardScope to "cache"
+	c := &Config{
+		//Options: opts,
+	}
+	var err error
+	c.ApiExtensionsClusterClient, err = apiextensionsclient.NewClusterForConfig(serverConfig.LoopbackClientConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	c.ApiExtensionsSharedInformerFactory = apiextensionsexternalversions.NewSharedInformerFactoryWithOptions(
+		c.ApiExtensionsClusterClient.Cluster(logicalcluster.Wildcard),
+		resyncPeriod,
+	)
+
+	c.ApiExtensions = &apiextensionsapiserver.Config{
+		GenericConfig: &genericapiserver.RecommendedConfig{
+			Config: serverConfig,
+		},
+		ExtraConfig: apiextensionsapiserver.ExtraConfig{
+			CRDRESTOptionsGetter: apiextensionsoptions.NewCRDRESTOptionsGetter(*opts.Etcd),
+			// Wire in a ServiceResolver that always returns an error that ResolveEndpoint is not yet
+			// supported. The effect is that CRD webhook conversions are not supported and will always get an
+			// error.
+			ServiceResolver:       &unimplementedServiceResolver{},
+			MasterCount:           1,
+			AuthResolverWrapper:   webhook.NewDefaultAuthenticationInfoResolverWrapper(nil, nil, serverConfig.LoopbackClientConfig, nil),
+			ClusterAwareCRDLister: &crdLister{lister: c.ApiExtensionsSharedInformerFactory.Apiextensions().V1().CustomResourceDefinitions().Lister()},
+		},
+	}
+
+	return c, nil
+}*/
 
 // unimplementedServiceResolver is a webhook.ServiceResolver that always returns an error, because
 // we have not implemented support for this yet. As a result, CRD webhook conversions are not

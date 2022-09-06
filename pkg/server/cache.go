@@ -18,29 +18,49 @@ package server
 
 import (
 	"context"
-	"net/http"
+	cacheserver "github.com/kcp-dev/kcp/pkg/cache/server"
 
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/klog/v2"
 
+	virtualcommandoptions "github.com/kcp-dev/kcp/cmd/virtual-workspaces/options"
 	"github.com/kcp-dev/kcp/pkg/cache/server/bootstrap"
+	cacheoptions "github.com/kcp-dev/kcp/pkg/cache/server/options"
 	"github.com/kcp-dev/kcp/pkg/util"
 )
 
-type Server struct {
-	CompletedConfig
-}
-
-func NewServer(c CompletedConfig) (*Server, error) {
-	s := &Server{
-		CompletedConfig: c,
-	}
-	return s, nil
-}
-
-func (s *Server) Run(ctx context.Context) error {
+func (s *Server) installCacheServer(ctx context.Context) error {
+	//
 	logger := klog.FromContext(ctx).WithValues("component", "cache-server")
-	server, err := s.ApiExtensions.New(genericapiserver.NewEmptyDelegate())
+
+	options := cacheoptions.NewOptions("")
+
+	etcdOptions := *s.Options.GenericControlPlane.Etcd
+	options.Etcd = &etcdOptions
+	//options.EmbeddedEtcd = s.Options.EmbeddedEtcd
+	options.SecureServing = s.Options.GenericControlPlane.SecureServing
+
+	completed, err := options.Complete()
+	if err != nil {
+		return err
+	}
+	completed.LoopbackClientConfig = s.GenericConfig.LoopbackClientConfig
+
+	config, err := cacheserver.NewConfig(completed)
+	if err != nil {
+		return err
+	}
+	completedConfig, err := config.Complete()
+	if err != nil {
+		return err
+	}
+
+	srv, err := cacheserver.NewServer(completedConfig)
+	if err != nil {
+		return err
+	}
+
+	server, err := srv.ApiExtensions.New(genericapiserver.NewEmptyDelegate())
 	if err != nil {
 		return err
 	}
@@ -69,9 +89,18 @@ func (s *Server) Run(ctx context.Context) error {
 	}); err != nil {
 		return err
 	}
-	return server.GenericAPIServer.PrepareRun().Run(ctx.Done())
-}
 
-type mux interface {
-	Handle(pattern string, handler http.Handler)
+	preparedCacheServer := server.GenericAPIServer.PrepareRun()
+	if err := s.AddPostStartHook("kcp-start-cache-server", func(ctx genericapiserver.PostStartHookContext) error {
+		preparedCacheServer.RunPostStartHooks(ctx.StopCh)
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	//
+
+	s.preHandlerChainMux.Handle(virtualcommandoptions.DefaultRootPathPrefix+"/cache/", preparedCacheServer.GenericAPIServer.Handler)
+	s.preHandlerChainMux.Handle("/shards/", preparedCacheServer.GenericAPIServer.Handler)
+	return nil
 }

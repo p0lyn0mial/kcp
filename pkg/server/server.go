@@ -467,6 +467,10 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}
 
+	if err := s.installCacheServer(ctx); err != nil {
+		return err
+	}
+
 	if err := s.Options.AdminAuthentication.WriteKubeConfig(s.GenericConfig, s.kcpAdminToken, s.shardAdminToken, s.userToken, s.shardAdminTokenHash); err != nil {
 		return err
 	}
