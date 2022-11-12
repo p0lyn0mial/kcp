@@ -17,21 +17,19 @@ limitations under the License.
 package clusterworkspace
 
 import (
-	"fmt"
+	"crypto/sha256"
+	"strings"
 
-	"github.com/kcp-dev/logicalcluster/v2"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/martinlindhe/base36"
 
 	tenancyv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/tenancy/v1alpha1"
 	"github.com/kcp-dev/kcp/pkg/apis/third_party/conditions/util/conditions"
 )
 
 const (
-	byCurrentShard = "byCurrentShard"
-	unschedulable  = "unschedulable"
-	byPhase        = "byPhase"
-	byWorkspace    = ControllerName + "byWorkspace" // will go away with scoping
+	byCurrentShard     = "byCurrentShard"
+	byBase36Sha224Name = "byBase36Sha224Name"
+	unschedulable      = "unschedulable"
 )
 
 func indexByCurrentShard(obj interface{}) ([]string, error) {
@@ -47,21 +45,14 @@ func indexUnschedulable(obj interface{}) ([]string, error) {
 	return []string{}, nil
 }
 
-func indexByPhase(obj interface{}) ([]string, error) {
-	workspace, ok := obj.(*tenancyv1alpha1.ClusterWorkspace)
-	if !ok {
-		return []string{}, fmt.Errorf("obj is supposed to be a tenancyv1alpha1.ClusterWorkspace, but is %T", obj)
-	}
-
-	return []string{string(workspace.Status.Phase)}, nil
+func indexByBase36Sha224Name(obj interface{}) ([]string, error) {
+	ws := obj.(*tenancyv1alpha1.ClusterWorkspaceShard)
+	return []string{ByBase36Sha224NameValue(ws.Name)}, nil
 }
 
-func indexByWorkspace(obj interface{}) ([]string, error) {
-	metaObj, ok := obj.(metav1.Object)
-	if !ok {
-		return []string{}, fmt.Errorf("obj is supposed to be a metav1.Object, but is %T", obj)
-	}
+func ByBase36Sha224NameValue(name string) string {
+	hash := sha256.Sum224([]byte(name))
+	base36hash := strings.ToLower(base36.EncodeBytes(hash[:]))
 
-	lcluster := logicalcluster.From(metaObj)
-	return []string{lcluster.String()}, nil
+	return base36hash[:8]
 }

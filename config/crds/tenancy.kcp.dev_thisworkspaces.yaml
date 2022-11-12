@@ -1,4 +1,3 @@
----
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -22,10 +21,21 @@ spec:
       jsonPath: .status.phase
       name: Phase
       type: string
+    - description: Type of the workspace
+      jsonPath: .spec.type.name
+      name: Type
+      type: string
+    - description: URL to access the workspace
+      jsonPath: .status.URL
+      name: URL
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ThisWorkspace
+        description: ThisWorkspace describes the current workspace.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -38,13 +48,49 @@ spec:
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
+            properties:
+              name:
+                enum:
+                - this
+                type: string
             type: object
           spec:
+            default: {}
+            properties:
+              type:
+                description: "type defines properties of the workspace both on creation
+                  (e.g. initial resources and initially installed APIs) and during
+                  runtime (e.g. permissions). If no type is provided, the default
+                  type for the workspace in which this workspace is nesting will be
+                  used. \n The type is a reference to a ClusterWorkspaceType in the
+                  listed workspace, but lower-cased. The ClusterWorkspaceType existence
+                  is validated at admission during creation. The type is immutable
+                  after creation. The use of a type is gated via the RBAC clusterworkspacetypes/use
+                  resource permission."
+                properties:
+                  name:
+                    description: name is the name of the ClusterWorkspaceType
+                    pattern: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?
+                    type: string
+                  path:
+                    description: path is an absolute reference to the workspace that
+                      owns this type, e.g. root:org:ws.
+                    pattern: ^root(:[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                    type: string
+                required:
+                - name
+                type: object
             type: object
           status:
+            default: {}
             description: ThisWorkspaceStatus communicates the observed state of the
               Workspace.
             properties:
+              URL:
+                description: url is the address under which the Kubernetes-cluster-like
+                  endpoint can be found. This URL can be used to access the workspace
+                  with standard Kubernetes client libraries and command line tools.
+                type: string
               conditions:
                 description: Current processing state of the ThisWorkspace.
                 items:
@@ -103,8 +149,12 @@ spec:
                   type: string
                 type: array
               phase:
-                description: Phase of the workspace (Initializing / Active / Terminating).
-                  This field is ALPHA.
+                default: Scheduling
+                description: Phase of the workspace (Scheduling, Initializing, Ready).
+                enum:
+                - Scheduling
+                - Initializing
+                - Ready
                 type: string
             type: object
         type: object

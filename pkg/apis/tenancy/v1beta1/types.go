@@ -73,17 +73,26 @@ type WorkspaceSpec struct {
 }
 
 // WorkspaceStatus communicates the observed state of the Workspace.
+//
+// +kubebuilder:validation:XValidation:rule="!has(oldSelf.cluster) || has(self.cluster)",message="status.cluster is immutable"
 type WorkspaceStatus struct {
 	// url is the address under which the Kubernetes-cluster-like endpoint
 	// can be found. This URL can be used to access the workspace with standard Kubernetes
 	// client libraries and command line tools.
 	//
-	// +required
 	// +kubebuilder:format:uri
-	URL string `json:"URL"`
+	URL string `json:"URL,omitempty"`
 
-	// Phase of the workspace (Initializing / Active / Terminating). This field is ALPHA.
-	Phase v1alpha1.ClusterWorkspacePhaseType `json:"phase,omitempty"`
+	// cluster is the name of the logical cluster this workspace is stored under.
+	//
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="cluster is immutable"
+	Cluster string `json:"cluster,omitempty"`
+
+	// Phase of the workspace (Scheduling, Initializing, Ready).
+	//
+	// +kubebuilder:default=Scheduling
+	Phase v1alpha1.WorkspacePhaseType `json:"phase,omitempty"`
 
 	// Current processing state of the ClusterWorkspace.
 	// +optional
@@ -97,7 +106,7 @@ type WorkspaceStatus struct {
 	// clusterworkspaces/initialize resource permission.
 	//
 	// +optional
-	Initializers []v1alpha1.ClusterWorkspaceInitializer `json:"initializers,omitempty"`
+	Initializers []v1alpha1.WorkspaceInitializer `json:"initializers,omitempty"`
 }
 
 // WorkspaceList is a list of Workspaces

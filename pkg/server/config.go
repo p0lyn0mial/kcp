@@ -260,8 +260,15 @@ func NewConfig(opts *kcpserveroptions.CompletedOptions) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	informerConfig := rest.CopyConfig(c.identityConfig)
+	informerConfig.UserAgent = "kcp-informers"
+	informerKcpClient, err := kcpclient.NewClusterForConfig(informerConfig)
+	if err != nil {
+		return nil, err
+	}
 	c.KcpSharedInformerFactory = kcpinformers.NewSharedInformerFactoryWithOptions(
-		c.KcpClusterClient.Cluster(logicalcluster.Wildcard),
+		informerKcpClient.Cluster(logicalcluster.Wildcard),
 		resyncPeriod,
 		kcpinformers.WithExtraClusterScopedIndexers(indexers.ClusterScoped()),
 		kcpinformers.WithExtraNamespaceScopedIndexers(indexers.NamespaceScoped()),
@@ -347,12 +354,11 @@ func NewConfig(opts *kcpserveroptions.CompletedOptions) (*Config, error) {
 		apiHandler = genericapiserver.DefaultBuildHandlerChainFromAuthz(apiHandler, genericConfig)
 
 		if opts.HomeWorkspaces.Enabled {
-			apiHandler = WithHomeWorkspaces(
+			apiHandler, err = WithHomeWorkspaces(
 				apiHandler,
 				genericConfig.Authorization.Authorizer,
 				c.KubeClusterClient,
 				c.KcpClusterClient,
-				c.BootstrapKcpClusterClient,
 				c.KubeSharedInformerFactory,
 				c.KcpSharedInformerFactory,
 				c.GenericConfig.ExternalAddress,
@@ -361,6 +367,9 @@ func NewConfig(opts *kcpserveroptions.CompletedOptions) (*Config, error) {
 				opts.HomeWorkspaces.BucketLevels,
 				opts.HomeWorkspaces.BucketSize,
 			)
+			if err != nil {
+				panic(err) // shouldn't happen due to flag validation
+			}
 		}
 
 		apiHandler = genericapiserver.DefaultBuildHandlerChainBeforeAuthz(apiHandler, genericConfig)
@@ -384,6 +393,7 @@ func NewConfig(opts *kcpserveroptions.CompletedOptions) (*Config, error) {
 		apiHandler = WithWorkspaceProjection(apiHandler)
 		apiHandler = kcpfilters.WithAuditEventClusterAnnotation(apiHandler)
 		apiHandler = WithAuditAnnotation(apiHandler) // Must run before any audit annotation is made
+		apiHandler = WithLocalProxy(apiHandler, opts.Extra.ShardName, opts.Extra.ShardBaseURL, c.KcpSharedInformerFactory.Tenancy().V1alpha1().ClusterWorkspaces(), c.KcpSharedInformerFactory.Tenancy().V1alpha1().ThisWorkspaces())
 		apiHandler = kcpfilters.WithClusterScope(apiHandler)
 		apiHandler = WithInClusterServiceAccountRequestRewrite(apiHandler)
 		apiHandler = kcpfilters.WithAcceptHeader(apiHandler)

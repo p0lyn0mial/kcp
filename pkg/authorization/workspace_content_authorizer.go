@@ -140,6 +140,16 @@ func (a *workspaceContentAuthorizer) Authorize(ctx context.Context, attr authori
 		return authorizer.DecisionNoOpinion, WorkspaceAccessNotPermittedReason, nil
 	}
 
+	// always let logical-cluster-admins through
+	if isUser && sets.NewString(attr.GetUser().GetGroups()...).Has(bootstrap.SystemLogicalClusterAdmin) {
+		kaudit.AddAuditAnnotations(
+			ctx,
+			WorkspaceContentAuditDecision, DecisionAllowed,
+			WorkspaceContentAuditReason, "subject is a logical cluster admin",
+		)
+		return a.delegate.Authorize(ctx, attr)
+	}
+
 	// non-root workspaces must have a parent
 	parentClusterName, hasParent := cluster.Name.Parent()
 	if !hasParent {
@@ -189,7 +199,7 @@ func (a *workspaceContentAuthorizer) Authorize(ctx context.Context, attr authori
 		return authorizer.DecisionNoOpinion, "", err
 	}
 
-	if ws.Status.Phase != tenancyv1alpha1.ClusterWorkspacePhaseInitializing && ws.Status.Phase != tenancyv1alpha1.ClusterWorkspacePhaseReady {
+	if ws.Status.Phase != tenancyv1alpha1.WorkspacePhaseInitializing && ws.Status.Phase != tenancyv1alpha1.WorkspacePhaseReady {
 		kaudit.AddAuditAnnotations(
 			ctx,
 			WorkspaceContentAuditDecision, DecisionNoOpinion,
@@ -248,7 +258,7 @@ func (a *workspaceContentAuthorizer) Authorize(ctx context.Context, attr authori
 	}
 
 	// non-admin subjects don't have access to initializing workspaces.
-	if ws.Status.Phase == tenancyv1alpha1.ClusterWorkspacePhaseInitializing && !extraGroups.Has(bootstrap.SystemKcpClusterWorkspaceAdminGroup) {
+	if ws.Status.Phase == tenancyv1alpha1.WorkspacePhaseInitializing && !extraGroups.Has(bootstrap.SystemKcpClusterWorkspaceAdminGroup) {
 		kaudit.AddAuditAnnotations(
 			ctx,
 			WorkspaceContentAuditDecision, DecisionNoOpinion,

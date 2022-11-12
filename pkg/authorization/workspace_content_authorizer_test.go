@@ -188,6 +188,12 @@ func TestWorkspaceContentAuthorizer(t *testing.T) {
 			wantReason:         "workspace access not permitted",
 		},
 		{
+			testName: "system:kcp:logical-cluster-admin can always pass",
+
+			requestedWorkspace: "root:non-existent",
+			requestingUser:     newUser("lcluster-admin", "system:kcp:logical-cluster-admin"),
+		},
+		{
 			testName: "permitted access user is denied on initializing workspace",
 
 			requestedWorkspace: "root:initializing",
@@ -385,15 +391,15 @@ func TestWorkspaceContentAuthorizer(t *testing.T) {
 			indexer := cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{})
 			require.NoError(t, indexer.Add(&tenancyv1alpha1.ClusterWorkspace{
 				ObjectMeta: metav1.ObjectMeta{Name: "ready", Annotations: map[string]string{logicalcluster.AnnotationKey: "root"}},
-				Status:     tenancyv1alpha1.ClusterWorkspaceStatus{Phase: tenancyv1alpha1.ClusterWorkspacePhaseReady},
+				Status:     tenancyv1alpha1.ClusterWorkspaceStatus{Phase: tenancyv1alpha1.WorkspacePhaseReady},
 			}))
 			require.NoError(t, indexer.Add(&tenancyv1alpha1.ClusterWorkspace{
 				ObjectMeta: metav1.ObjectMeta{Name: "scheduling", Annotations: map[string]string{logicalcluster.AnnotationKey: "root"}},
-				Status:     tenancyv1alpha1.ClusterWorkspaceStatus{Phase: tenancyv1alpha1.ClusterWorkspacePhaseScheduling},
+				Status:     tenancyv1alpha1.ClusterWorkspaceStatus{Phase: tenancyv1alpha1.WorkspacePhaseScheduling},
 			}))
 			require.NoError(t, indexer.Add(&tenancyv1alpha1.ClusterWorkspace{
 				ObjectMeta: metav1.ObjectMeta{Name: "initializing", Annotations: map[string]string{logicalcluster.AnnotationKey: "root"}},
-				Status:     tenancyv1alpha1.ClusterWorkspaceStatus{Phase: tenancyv1alpha1.ClusterWorkspacePhaseInitializing},
+				Status:     tenancyv1alpha1.ClusterWorkspaceStatus{Phase: tenancyv1alpha1.WorkspacePhaseInitializing},
 			}))
 			lister := v1alpha1.NewClusterWorkspaceLister(indexer)
 

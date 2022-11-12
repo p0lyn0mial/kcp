@@ -365,31 +365,37 @@ type ClusterWorkspaceTypeList struct {
 	Items []ClusterWorkspaceType `json:"items"`
 }
 
-// ClusterWorkspaceInitializer is a unique string corresponding to a cluster workspace
+// WorkspaceInitializer is a unique string corresponding to a cluster workspace
 // initialization controller for the given type of workspaces.
 //
 // +kubebuilder:validation:Pattern:="^(root(:[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(:[a-z][a-z0-9]([-a-z0-9]*[a-z0-9])?))|(system:.+)$"
-type ClusterWorkspaceInitializer string
+type WorkspaceInitializer string
 
-// ClusterWorkspaceAPIBindingsInitializer is a special-case initializer that waits for APIBindings defined
+// WorkspaceAPIBindingsInitializer is a special-case initializer that waits for APIBindings defined
 // on a ClusterWorkspaceType to be created.
-const ClusterWorkspaceAPIBindingsInitializer ClusterWorkspaceInitializer = "system:apibindings"
+const WorkspaceAPIBindingsInitializer WorkspaceInitializer = "system:apibindings"
 
-// ClusterWorkspacePhaseType is the type of the current phase of the workspace
-type ClusterWorkspacePhaseType string
+// WorkspacePhaseType is the type of the current phase of the workspace
+//
+// +kubebuilder:validation:Enum=Scheduling;Initializing;Ready
+type WorkspacePhaseType string
 
 const (
-	ClusterWorkspacePhaseScheduling   ClusterWorkspacePhaseType = "Scheduling"
-	ClusterWorkspacePhaseInitializing ClusterWorkspacePhaseType = "Initializing"
-	ClusterWorkspacePhaseReady        ClusterWorkspacePhaseType = "Ready"
+	WorkspacePhaseScheduling   WorkspacePhaseType = "Scheduling"
+	WorkspacePhaseInitializing WorkspacePhaseType = "Initializing"
+	WorkspacePhaseReady        WorkspacePhaseType = "Ready"
 )
 
-const ExperimentalClusterWorkspaceOwnerAnnotationKey string = "experimental.tenancy.kcp.dev/owner"
+const ExperimentalWorkspaceOwnerAnnotationKey string = "experimental.tenancy.kcp.dev/owner"
 
 // ClusterWorkspaceStatus communicates the observed state of the ClusterWorkspace.
+//
+// +kubebuilder:validation:XValidation:rule="!has(oldSelf.cluster) || has(self.cluster)",message="status.cluster is immutable"
 type ClusterWorkspaceStatus struct {
 	// Phase of the workspace  (Scheduling / Initializing / Ready)
-	Phase ClusterWorkspacePhaseType `json:"phase,omitempty"`
+	//
+	// +kubebuilder:default=Scheduling
+	Phase WorkspacePhaseType `json:"phase,omitempty"`
 
 	// Current processing state of the ClusterWorkspace.
 	// +optional
@@ -402,6 +408,12 @@ type ClusterWorkspaceStatus struct {
 	// +kubebuilder:validation:Pattern:https://[^/].*
 	// +optional
 	BaseURL string `json:"baseURL,omitempty"`
+
+	// cluster is the name of the logical cluster this workspace is stored under.
+	//
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="cluster is immutable"
+	Cluster string `json:"cluster,omitempty"`
 
 	// Contains workspace placement information.
 	//
@@ -416,7 +428,7 @@ type ClusterWorkspaceStatus struct {
 	// clusterworkspaces/initialize resource permission.
 	//
 	// +optional
-	Initializers []ClusterWorkspaceInitializer `json:"initializers,omitempty"`
+	Initializers []WorkspaceInitializer `json:"initializers,omitempty"`
 }
 
 // These are valid conditions of workspace.
@@ -630,7 +642,12 @@ var (
 	}
 )
 
-// ThisWorkspace
+const (
+	// ThisWorkspaceName is the name of the ThisWorkspace singleton.
+	ThisWorkspaceName = "this"
+)
+
+// ThisWorkspace describes the current workspace.
 //
 // +crd
 // +genclient
@@ -639,6 +656,9 @@ var (
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories=kcp
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`,description="The current phase (e.g. Scheduling, Initializing, Ready)"
+// +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type.name`,description="Type of the workspace"
+// +kubebuilder:printcolumn:name="URL",type=string,JSONPath=`.status.URL`,description="URL to access the workspace"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type ThisWorkspace struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
@@ -650,12 +670,33 @@ type ThisWorkspace struct {
 }
 
 type ThisWorkspaceSpec struct {
+	// type defines properties of the workspace both on creation (e.g. initial
+	// resources and initially installed APIs) and during runtime (e.g. permissions).
+	// If no type is provided, the default type for the workspace in which this workspace
+	// is nesting will be used.
+	//
+	// The type is a reference to a ClusterWorkspaceType in the listed workspace, but
+	// lower-cased. The ClusterWorkspaceType existence is validated at admission during
+	// creation. The type is immutable after creation. The use of a type is gated via
+	// the RBAC clusterworkspacetypes/use resource permission.
+	//
+	// +optional
+	Type ClusterWorkspaceTypeReference `json:"type,omitempty"`
 }
 
 // ThisWorkspaceStatus communicates the observed state of the Workspace.
 type ThisWorkspaceStatus struct {
-	// Phase of the workspace (Initializing / Active / Terminating). This field is ALPHA.
-	Phase ClusterWorkspacePhaseType `json:"phase,omitempty"`
+	// url is the address under which the Kubernetes-cluster-like endpoint
+	// can be found. This URL can be used to access the workspace with standard Kubernetes
+	// client libraries and command line tools.
+	//
+	// +kubebuilder:format:uri
+	URL string `json:"URL,omitempty"`
+
+	// Phase of the workspace (Scheduling, Initializing, Ready).
+	//
+	// +kubebuilder:default=Scheduling
+	Phase WorkspacePhaseType `json:"phase,omitempty"`
 
 	// Current processing state of the ThisWorkspace.
 	// +optional
@@ -666,8 +707,19 @@ type ThisWorkspaceStatus struct {
 	// stay in the phase "Initializing" state until all initializers are cleared.
 	//
 	// +optional
-	Initializers []ClusterWorkspaceInitializer `json:"initializers,omitempty"`
+	Initializers []WorkspaceInitializer `json:"initializers,omitempty"`
 }
+
+func (in *ThisWorkspace) SetConditions(c conditionsv1alpha1.Conditions) {
+	in.Status.Conditions = c
+}
+
+func (in *ThisWorkspace) GetConditions() conditionsv1alpha1.Conditions {
+	return in.Status.Conditions
+}
+
+var _ conditions.Getter = &ThisWorkspace{}
+var _ conditions.Setter = &ThisWorkspace{}
 
 // ThisWorkspaceList is a list of ThisWorkspaces
 //

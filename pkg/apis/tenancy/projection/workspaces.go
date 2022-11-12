@@ -27,10 +27,11 @@ func ProjectClusterWorkspaceToWorkspace(from *tenancyv1alpha1.ClusterWorkspace, 
 	to.Status.URL = from.Status.BaseURL
 	to.Status.Phase = from.Status.Phase
 	to.Status.Initializers = from.Status.Initializers
+	to.Status.Cluster = from.Status.Cluster
 
 	to.Annotations = make(map[string]string, len(from.Annotations))
 	for k, v := range from.Annotations {
-		if k == tenancyv1alpha1.ExperimentalClusterWorkspaceOwnerAnnotationKey {
+		if k == tenancyv1alpha1.ExperimentalWorkspaceOwnerAnnotationKey {
 			// do not leak user information
 			continue
 		}
