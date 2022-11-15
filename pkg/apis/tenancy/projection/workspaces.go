@@ -27,10 +27,11 @@ func ProjectClusterWorkspaceToWorkspace(from *tenancyv1alpha1.ClusterWorkspace, 
 	to.Status.URL = from.Status.BaseURL
 	to.Status.Phase = from.Status.Phase
 	to.Status.Initializers = from.Status.Initializers
+	to.Status.Cluster = from.Status.Cluster
 
 	to.Annotations = make(map[string]string, len(from.Annotations))
 	for k, v := range from.Annotations {
-		if k == tenancyv1alpha1.ExperimentalClusterWorkspaceOwnerAnnotationKey {
+		if k == tenancyv1alpha1.ExperimentalWorkspaceOwnerAnnotationKey {
 			// do not leak user information
 			continue
 		}
@@ -47,4 +48,14 @@ func ProjectClusterWorkspaceToWorkspace(from *tenancyv1alpha1.ClusterWorkspace, 
 			to.Status.Conditions = append(to.Status.Conditions, *c)
 		}
 	}
+}
+
+func ProjectWorkspaceToClusterWorkspace(from *tenancyv1beta1.Workspace, to *tenancyv1alpha1.ClusterWorkspace) {
+	to.ObjectMeta = from.ObjectMeta
+	to.Spec.Type = from.Spec.Type
+	to.Status.BaseURL = from.Status.URL
+	to.Status.Phase = from.Status.Phase
+	to.Status.Initializers = from.Status.Initializers
+	to.Status.Cluster = from.Status.Cluster
+	to.Status.Conditions = from.Status.Conditions
 }

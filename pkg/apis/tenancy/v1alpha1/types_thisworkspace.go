@@ -28,7 +28,7 @@ const (
 	// ThisWorkspaceName is the name of the ThisWorkspace singleton.
 	ThisWorkspaceName = "this"
 
-	// ThisWorkspaceFinalizer attached to new ClusterWorkspace (in phase ClusterWorkspacePhaseScheduling) resources so that we can control
+	// ThisWorkspaceFinalizer attached to new ClusterWorkspace (in phase WorkspacePhaseScheduling) resources so that we can control
 	// deletion of ThisWorkspace resources
 	ThisWorkspaceFinalizer = "tenancy.kcp.dev/thisworkspace"
 )
@@ -50,7 +50,7 @@ type ThisWorkspace struct {
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// +optional
-	Spec ThisWorkspaceSpec `json:"spec, omitempty"`
+	Spec ThisWorkspaceSpec `json:"spec,omitempty"`
 	// +optional
 	Status ThisWorkspaceStatus `json:"status,omitempty"`
 }
@@ -69,6 +69,13 @@ type ThisWorkspaceSpec struct {
 	//
 	// +optional
 	Type ClusterWorkspaceTypeReference `json:"type,omitempty"`
+
+	// DirectlyDeletable indicates that this workspace can be directly deleted by the user
+	// from within the workspace.
+	//
+	// +optional
+	// +kubebuilder:default=false
+	DirectlyDeletable bool `json:"directlyDeletable,omitempty"`
 
 	// owner is a reference to a resource controlling the life-cycle of this workspace.
 	// On deletion of the ThisWorkspace, the finalizer tenancy.kcp.dev/thisworkspace is
@@ -132,8 +139,10 @@ type ThisWorkspaceStatus struct {
 	// +kubebuilder:format:uri
 	URL string `json:"URL,omitempty"`
 
-	// Phase of the workspace (Scheduling, Initializing, Ready).
-	Phase ClusterWorkspacePhaseType `json:"phase,omitempty"`
+	// Phase of the workspace (Initializing, Ready).
+	//
+	// +kubebuilder:default=Initializing
+	Phase WorkspacePhaseType `json:"phase,omitempty"`
 
 	// Current processing state of the ThisWorkspace.
 	// +optional
@@ -144,7 +153,7 @@ type ThisWorkspaceStatus struct {
 	// stay in the phase "Initializing" state until all initializers are cleared.
 	//
 	// +optional
-	Initializers []ClusterWorkspaceInitializer `json:"initializers,omitempty"`
+	Initializers []WorkspaceInitializer `json:"initializers,omitempty"`
 }
 
 func (in *ThisWorkspace) SetConditions(c conditionsv1alpha1.Conditions) {

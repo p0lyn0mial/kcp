@@ -137,9 +137,13 @@ func (r ClusterWorkspaceTypeReference) Equal(other ClusterWorkspaceTypeReference
 }
 
 // ClusterWorkspaceStatus communicates the observed state of the ClusterWorkspace.
+//
+// +kubebuilder:validation:XValidation:rule="!has(oldSelf.cluster) || has(self.cluster)",message="status.cluster is immutable"
 type ClusterWorkspaceStatus struct {
-	// Phase of the workspace  (Scheduling / Initializing / Ready)
-	Phase ClusterWorkspacePhaseType `json:"phase,omitempty"`
+	// Phase of the workspace (Scheduling / Initializing / Ready)
+	//
+	// +kubebuilder:default=Scheduling
+	Phase WorkspacePhaseType `json:"phase,omitempty"`
 
 	// Current processing state of the ClusterWorkspace.
 	// +optional
@@ -152,6 +156,12 @@ type ClusterWorkspaceStatus struct {
 	// +kubebuilder:validation:Pattern:https://[^/].*
 	// +optional
 	BaseURL string `json:"baseURL,omitempty"`
+
+	// cluster is the name of the logical cluster this workspace is stored under.
+	//
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="cluster is immutable"
+	Cluster string `json:"cluster,omitempty"`
 
 	// Contains workspace placement information.
 	//
@@ -166,19 +176,21 @@ type ClusterWorkspaceStatus struct {
 	// clusterworkspaces/initialize resource permission.
 	//
 	// +optional
-	Initializers []ClusterWorkspaceInitializer `json:"initializers,omitempty"`
+	Initializers []WorkspaceInitializer `json:"initializers,omitempty"`
 }
 
-// ClusterWorkspacePhaseType is the type of the current phase of the workspace
-type ClusterWorkspacePhaseType string
+// WorkspacePhaseType is the type of the current phase of the workspace
+//
+// +kubebuilder:validation:Enum=Scheduling;Initializing;Ready
+type WorkspacePhaseType string
 
 const (
-	ClusterWorkspacePhaseScheduling   ClusterWorkspacePhaseType = "Scheduling"
-	ClusterWorkspacePhaseInitializing ClusterWorkspacePhaseType = "Initializing"
-	ClusterWorkspacePhaseReady        ClusterWorkspacePhaseType = "Ready"
+	WorkspacePhaseScheduling   WorkspacePhaseType = "Scheduling"
+	WorkspacePhaseInitializing WorkspacePhaseType = "Initializing"
+	WorkspacePhaseReady        WorkspacePhaseType = "Ready"
 )
 
-const ExperimentalClusterWorkspaceOwnerAnnotationKey string = "experimental.tenancy.kcp.dev/owner"
+const ExperimentalWorkspaceOwnerAnnotationKey string = "experimental.tenancy.kcp.dev/owner"
 
 // ClusterWorkspaceLocation specifies workspace placement information, including current, desired (target), and
 // historical information.
@@ -216,16 +228,9 @@ const (
 	// WorkspaceReasonReasonUnknown reason in WorkspaceScheduled means that scheduler has failed for
 	// some unexpected reason.
 	WorkspaceReasonReasonUnknown = "Unknown"
-	// WorkspaceReasonUnreschedulable reason in WorkspaceScheduled WorkspaceCondition means that the scheduler
-	// can't reschedule the workspace right now, for example because it not in Scheduling phase anymore and
-	// movement is not possible.
-	WorkspaceReasonUnreschedulable = "Unreschedulable"
 
 	// WorkspaceShardValid represents status of the connection process for this cluster workspace.
 	WorkspaceShardValid conditionsv1alpha1.ConditionType = "WorkspaceShardValid"
-	// WorkspaceShardValidReasonShardNotFound reason in WorkspaceShardValid condition means that the
-	// referenced ClusterWorkspaceShard object got deleted.
-	WorkspaceShardValidReasonShardNotFound = "ShardNotFound"
 
 	// WorkspaceDeletionContentSuccess represents the status that all resources in the workspace is deleting
 	WorkspaceDeletionContentSuccess conditionsv1alpha1.ConditionType = "WorkspaceDeletionContentSuccess"
@@ -238,6 +243,9 @@ const (
 	// WorkspaceInitializedInitializerExists reason in WorkspaceInitialized condition means that there is at least
 	// one initializer still left.
 	WorkspaceInitializedInitializerExists = "InitializerExists"
+	// WorkspaceInitializedWorkspaceDisappeared reason in WorkspaceInitialized condition means that the ThisWorkspace
+	// object has disappeared.
+	WorkspaceInitializedWorkspaceDisappeared = "WorkspaceDisappeared"
 
 	// WorkspaceAPIBindingsInitialized represents the status of the initial APIBindings for the workspace.
 	WorkspaceAPIBindingsInitialized conditionsv1alpha1.ConditionType = "APIBindingsInitialized"

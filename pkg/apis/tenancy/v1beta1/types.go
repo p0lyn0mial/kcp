@@ -70,19 +70,46 @@ type WorkspaceSpec struct {
 	//
 	// +optional
 	Type v1alpha1.ClusterWorkspaceTypeReference `json:"type,omitempty"`
+
+	// location constraints where this workspace can be scheduled to.
+	//
+	// If the no location is specified, an arbitrary location is chosen.
+	//
+	// +optional
+	Location *WorkspaceLocation `json:"shard,omitempty"`
+}
+
+type WorkspaceLocation struct {
+
+	// selector is a label selector that filters workspace scheduling targets.
+	//
+	// +optional
+	Selector *metav1.LabelSelector `json:"selector,omitempty"`
 }
 
 // WorkspaceStatus communicates the observed state of the Workspace.
+//
+// +kubebuilder:validation:XValidation:rule="!has(oldSelf.cluster) || has(self.cluster)",message="cluster is immutable"
+// +kubebuilder:validation:XValidation:rule="!has(oldSelf.URL) || has(self.URL)",message="URL cannot be unset"
 type WorkspaceStatus struct {
 	// url is the address under which the Kubernetes-cluster-like endpoint
 	// can be found. This URL can be used to access the workspace with standard Kubernetes
 	// client libraries and command line tools.
 	//
 	// +kubebuilder:format:uri
+	// +kubebuilder:validation:MinLength=1
 	URL string `json:"URL,omitempty"`
 
+	// cluster is the name of the logical cluster this workspace is stored under.
+	//
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="cluster is immutable"
+	Cluster string `json:"cluster,omitempty"`
+
 	// Phase of the workspace (Scheduling, Initializing, Ready).
-	Phase v1alpha1.ClusterWorkspacePhaseType `json:"phase,omitempty"`
+	//
+	// +kubebuilder:default=Scheduling
+	Phase v1alpha1.WorkspacePhaseType `json:"phase,omitempty"`
 
 	// Current processing state of the ClusterWorkspace.
 	// +optional
@@ -96,7 +123,15 @@ type WorkspaceStatus struct {
 	// clusterworkspaces/initialize resource permission.
 	//
 	// +optional
-	Initializers []v1alpha1.ClusterWorkspaceInitializer `json:"initializers,omitempty"`
+	Initializers []v1alpha1.WorkspaceInitializer `json:"initializers,omitempty"`
+}
+
+func (in *Workspace) SetConditions(c conditionsv1alpha1.Conditions) {
+	in.Status.Conditions = c
+}
+
+func (in *Workspace) GetConditions() conditionsv1alpha1.Conditions {
+	return in.Status.Conditions
 }
 
 // WorkspaceList is a list of Workspaces

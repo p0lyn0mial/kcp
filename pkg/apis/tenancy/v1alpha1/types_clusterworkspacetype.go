@@ -221,24 +221,24 @@ type ClusterWorkspaceTypeList struct {
 	Items []ClusterWorkspaceType `json:"items"`
 }
 
-// ClusterWorkspaceInitializer is a unique string corresponding to a cluster workspace
+// WorkspaceInitializer is a unique string corresponding to a cluster workspace
 // initialization controller for the given type of workspaces.
 //
 // +kubebuilder:validation:Pattern:="^(root(:[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(:[a-z][a-z0-9]([-a-z0-9]*[a-z0-9])?))|(system:.+)$"
-type ClusterWorkspaceInitializer string
+type WorkspaceInitializer string
 
-// ClusterWorkspaceAPIBindingsInitializer is a special-case initializer that waits for APIBindings defined
+// WorkspaceAPIBindingsInitializer is a special-case initializer that waits for APIBindings defined
 // on a ClusterWorkspaceType to be created.
-const ClusterWorkspaceAPIBindingsInitializer ClusterWorkspaceInitializer = "system:apibindings"
+const WorkspaceAPIBindingsInitializer WorkspaceInitializer = "system:apibindings"
 
 const (
-	// ClusterWorkspacePhaseLabel holds the ClusterWorkspace.Status.Phase value, and is enforced to match
+	// WorkspacePhaseLabel holds the ClusterWorkspace.Status.Phase value, and is enforced to match
 	// by a mutating admission webhook.
-	ClusterWorkspacePhaseLabel = "internal.kcp.dev/phase"
-	// ClusterWorkspaceInitializerLabelPrefix is the prefix for labels which match ClusterWorkspace.Status.Initializers,
+	WorkspacePhaseLabel = "internal.kcp.dev/phase"
+	// WorkspaceInitializerLabelPrefix is the prefix for labels which match ClusterWorkspace.Status.Initializers,
 	// and the set of labels with this prefix is enforced to match the set of initializers by a mutating admission
 	// webhook.
-	ClusterWorkspaceInitializerLabelPrefix = "initializer.internal.kcp.dev/"
+	WorkspaceInitializerLabelPrefix = "initializer.internal.kcp.dev/"
 )
 
 const (
