@@ -19,6 +19,8 @@ package workspace
 import (
 	"context"
 	"encoding/json"
+	"github.com/kcp-dev/kcp/pkg/apis/tenancy/initialization"
+	"strings"
 
 	authenticationv1 "k8s.io/api/authentication/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -54,6 +56,24 @@ func (r *metaDataReconciler) reconcile(ctx context.Context, workspace *tenancyv1
 		if finalizers.Has(deletion.WorkspaceFinalizer) {
 			workspace.Finalizers = finalizers.Delete(deletion.WorkspaceFinalizer).List()
 			changed = true
+		}
+	}
+
+	initializerKeys := sets.NewString()
+	for _, initializer := range workspace.Status.Initializers {
+		key, value := initialization.InitializerToLabel(initializer)
+		initializerKeys.Insert(key)
+		if got, expected := workspace.Labels[key], value; got != expected {
+			workspace.Labels[key] = value
+			changed = true
+		}
+	}
+	for key := range workspace.Labels {
+		if strings.HasPrefix(key, tenancyv1alpha1.WorkspaceInitializerLabelPrefix) {
+			if !initializerKeys.Has(key) {
+				delete(workspace.Labels, key)
+				changed = true
+			}
 		}
 	}
 
