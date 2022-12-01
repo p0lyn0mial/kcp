@@ -110,6 +110,6 @@ func WithLocalProxy(
 
 		klog.FromContext(ctx).V(4).Info("Rewriting cluster", "from", clusterInfo.Name, "to", rewrittenClusterName)
 		clusterInfo.Name = rewrittenClusterName
-		handler.ServeHTTP(w, req.WithContext(ctx))
+		handler.ServeHTTP(w, req.WithContext(request.WithCluster(ctx, *clusterInfo)))
 	})
 }
