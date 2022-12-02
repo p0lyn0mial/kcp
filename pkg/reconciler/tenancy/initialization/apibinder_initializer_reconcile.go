@@ -214,7 +214,7 @@ func (b *APIBinder) reconcile(ctx context.Context, this *tenancyv1alpha1.ThisWor
 
 	for exportRef := range requiredExportRefs {
 		workspaceExportRef := apisv1alpha1.ClusterExportReference{
-			Path:       exportRef.Path,
+			Identifier: exportRef.Path,
 			ExportName: exportRef.ExportName,
 		}
 

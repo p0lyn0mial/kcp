@@ -163,7 +163,7 @@ func TestNamespaceScheduler(t *testing.T) {
 							{
 								Cluster: &apisv1alpha1.ClusterExportReference{
 									ExportName: "kubernetes",
-									Path:       server.clusterName.String(),
+									Identifier: server.clusterName.String(),
 								},
 							},
 						},

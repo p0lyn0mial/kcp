@@ -288,7 +288,7 @@ func (c *controller) process(ctx context.Context, key string) error {
 		if binding.Spec.Reference.Cluster == nil {
 			continue
 		}
-		if binding.Spec.Reference.Cluster.Path != clusterName.String() {
+		if binding.Spec.Reference.Cluster.Identifier != clusterName.String() {
 			continue
 		}
 		if binding.Spec.Reference.Cluster.ExportName != reconcilerapiexport.TemporaryComputeServiceExportName {

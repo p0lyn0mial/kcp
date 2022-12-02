@@ -80,7 +80,7 @@ func (l *Labeler) LabelsFor(ctx context.Context, cluster logicalcluster.Name, gr
 				continue
 			}
 
-			k, v, err := permissionclaims.ToLabelKeyAndValue(logicalcluster.New(boundAPIExportWorkspace.Path), boundAPIExportWorkspace.ExportName, claim.PermissionClaim)
+			k, v, err := permissionclaims.ToLabelKeyAndValue(logicalcluster.New(boundAPIExportWorkspace.Identifier), boundAPIExportWorkspace.ExportName, claim.PermissionClaim)
 			if err != nil {
 				// extremely unlikely to get an error here - it means the json marshaling failed
 				logger.Error(err, "error calculating permission claim label key and value",
@@ -102,7 +102,7 @@ func (l *Labeler) LabelsFor(ctx context.Context, cluster logicalcluster.Name, gr
 		}
 
 		if exportRef := binding.Spec.Reference; exportRef.Cluster != nil {
-			k, v := permissionclaims.ToReflexiveAPIBindingLabelKeyAndValue(logicalcluster.New(exportRef.Cluster.Path), exportRef.Cluster.ExportName)
+			k, v := permissionclaims.ToReflexiveAPIBindingLabelKeyAndValue(logicalcluster.New(exportRef.Cluster.Identifier), exportRef.Cluster.ExportName)
 			if _, found := labels[k]; !found {
 				labels[k] = v
 			}

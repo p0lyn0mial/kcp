@@ -160,7 +160,7 @@ func TestGarbageCollectorTypesFromBinding(t *testing.T) {
 				Spec: apisv1alpha1.APIBindingSpec{
 					Reference: apisv1alpha1.ExportReference{
 						Cluster: &apisv1alpha1.ClusterExportReference{
-							Path:       apiProviderClusterName.String(),
+							Identifier: apiProviderClusterName.String(),
 							ExportName: cowboysAPIExport.Name,
 						},
 					},

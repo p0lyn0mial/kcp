@@ -189,7 +189,7 @@ func TestMaximalPermissionPolicyAuthorizer(t *testing.T) {
 			Spec: apisv1alpha1.APIBindingSpec{
 				Reference: apisv1alpha1.ExportReference{
 					Cluster: &apisv1alpha1.ClusterExportReference{
-						Path:       providerWorkspace.String(),
+						Identifier: providerWorkspace.String(),
 						ExportName: "today-cowboys",
 					},
 				},
@@ -289,7 +289,7 @@ func TestMaximalPermissionPolicyAuthorizer(t *testing.T) {
 		Spec: apisv1alpha1.APIBindingSpec{
 			Reference: apisv1alpha1.ExportReference{
 				Cluster: &apisv1alpha1.ClusterExportReference{
-					Path:       "root:not-existent",
+					Identifier: "root:not-existent",
 					ExportName: "today-cowboys",
 				},
 			},

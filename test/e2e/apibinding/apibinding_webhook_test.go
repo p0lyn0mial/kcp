@@ -103,7 +103,7 @@ func TestAPIBindingMutatingWebhook(t *testing.T) {
 		Spec: apisv1alpha1.APIBindingSpec{
 			Reference: apisv1alpha1.ExportReference{
 				Cluster: &apisv1alpha1.ClusterExportReference{
-					Path:       sourceWorkspace.String(),
+					Identifier: sourceWorkspace.String(),
 					ExportName: cowboysAPIExport.Name,
 				},
 			},
@@ -248,7 +248,7 @@ func TestAPIBindingValidatingWebhook(t *testing.T) {
 		Spec: apisv1alpha1.APIBindingSpec{
 			Reference: apisv1alpha1.ExportReference{
 				Cluster: &apisv1alpha1.ClusterExportReference{
-					Path:       sourceWorkspace.String(),
+					Identifier: sourceWorkspace.String(),
 					ExportName: cowboysAPIExport.Name,
 				},
 			},

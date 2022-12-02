@@ -93,8 +93,8 @@ func (o *apiBindingAdmission) Admit(ctx context.Context, a admission.Attributes,
 	if err != nil {
 		return admission.NewForbidden(a, fmt.Errorf("error determining workspace: %w", err))
 	}
-	if apiBinding.Spec.Reference.Cluster.Path == "" {
-		apiBinding.Spec.Reference.Cluster.Path = cluster.Name.String()
+	if apiBinding.Spec.Reference.Cluster.Identifier == "" {
+		apiBinding.Spec.Reference.Cluster.Identifier = cluster.Name.String()
 	}
 
 	// set labels
@@ -105,7 +105,7 @@ func (o *apiBindingAdmission) Admit(ctx context.Context, a admission.Attributes,
 			apiBinding.Labels = make(map[string]string)
 		}
 		apiBinding.Labels[apisv1alpha1.InternalAPIBindingExportLabelKey] = permissionclaims.ToAPIBindingExportLabelValue(
-			logicalcluster.New(apiBinding.Spec.Reference.Cluster.Path),
+			logicalcluster.New(apiBinding.Spec.Reference.Cluster.Identifier),
 			apiBinding.Spec.Reference.Cluster.ExportName,
 		)
 	}
@@ -165,7 +165,7 @@ func (o *apiBindingAdmission) Validate(ctx context.Context, a admission.Attribut
 	}
 
 	// Verify the workspace reference.
-	if apiBinding.Spec.Reference.Cluster.Path == "" {
+	if apiBinding.Spec.Reference.Cluster.Identifier == "" {
 		return admission.NewForbidden(a, fmt.Errorf("workspace reference is missing")) // this should not happen due to validation
 	}
 
@@ -174,14 +174,14 @@ func (o *apiBindingAdmission) Validate(ctx context.Context, a admission.Attribut
 	if apiBinding.Spec.Reference.Cluster == nil && found {
 		return admission.NewForbidden(a, field.Invalid(field.NewPath("metadata").Child("labels").Key(apisv1alpha1.InternalAPIBindingExportLabelKey), value, "must not be set"))
 	} else if expected := permissionclaims.ToAPIBindingExportLabelValue(
-		logicalcluster.New(apiBinding.Spec.Reference.Cluster.Path),
+		logicalcluster.New(apiBinding.Spec.Reference.Cluster.Identifier),
 		apiBinding.Spec.Reference.Cluster.ExportName,
 	); value != expected {
 		return admission.NewForbidden(a, field.Invalid(field.NewPath("metadata").Child("labels").Key(apisv1alpha1.InternalAPIBindingExportLabelKey), value, fmt.Sprintf("must be set to %q", expected)))
 	}
 
 	// Access check
-	if err := o.checkAPIExportAccess(ctx, a.GetUserInfo(), logicalcluster.New(apiBinding.Spec.Reference.Cluster.Path), apiBinding.Spec.Reference.Cluster.ExportName); err != nil {
+	if err := o.checkAPIExportAccess(ctx, a.GetUserInfo(), logicalcluster.New(apiBinding.Spec.Reference.Cluster.Identifier), apiBinding.Spec.Reference.Cluster.ExportName); err != nil {
 		action := "create"
 		if a.GetOperation() == admission.Update {
 			action = "update"

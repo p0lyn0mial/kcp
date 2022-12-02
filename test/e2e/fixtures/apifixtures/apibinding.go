@@ -53,7 +53,7 @@ func BindToExport(
 		Spec: apisv1alpha1.APIBindingSpec{
 			Reference: apisv1alpha1.ExportReference{
 				Cluster: &apisv1alpha1.ClusterExportReference{
-					Path:       exportClusterName.String(),
+					Identifier: exportClusterName.String(),
 					ExportName: apiExportName,
 				},
 			},

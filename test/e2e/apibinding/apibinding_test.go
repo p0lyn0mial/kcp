@@ -91,7 +91,7 @@ func TestAPIBindingAPIExportReferenceImmutability(t *testing.T) {
 		Spec: apisv1alpha1.APIBindingSpec{
 			Reference: apisv1alpha1.ExportReference{
 				Cluster: &apisv1alpha1.ClusterExportReference{
-					Path:       serviceProviderWorkspace.String(),
+					Identifier: serviceProviderWorkspace.String(),
 					ExportName: "today-cowboys",
 				},
 			},
@@ -187,7 +187,7 @@ func TestAPIBinding(t *testing.T) {
 			Spec: apisv1alpha1.APIBindingSpec{
 				Reference: apisv1alpha1.ExportReference{
 					Cluster: &apisv1alpha1.ClusterExportReference{
-						Path:       providerWorkspace.String(),
+						Identifier: providerWorkspace.String(),
 						ExportName: "today-cowboys",
 					},
 				},
@@ -260,7 +260,7 @@ func TestAPIBinding(t *testing.T) {
 			Spec: apisv1alpha1.APIBindingSpec{
 				Reference: apisv1alpha1.ExportReference{
 					Cluster: &apisv1alpha1.ClusterExportReference{
-						Path:       serviceProvider2Workspace.String(),
+						Identifier: serviceProvider2Workspace.String(),
 						ExportName: "today-cowboys",
 					},
 				},
