@@ -80,7 +80,7 @@ type workspaceContentAuthorizer struct {
 func (a *workspaceContentAuthorizer) Authorize(ctx context.Context, attr authorizer.Attributes) (authorizer.Decision, string, error) {
 	cluster := genericapirequest.ClusterFrom(ctx)
 	// empty or non-root based workspaces have no meaning in the context of authorizing workspace content.
-	if cluster == nil || cluster.Name.Empty() || !cluster.Name.HasPrefix(tenancyv1alpha1.RootCluster) {
+	if cluster == nil || cluster.Name.Empty() || !cluster.Name.HasPrefix(tenancyv1alpha1.RootCluster.Path()) {
 		kaudit.AddAuditAnnotations(
 			ctx,
 			WorkspaceContentAuditDecision, DecisionNoOpinion,

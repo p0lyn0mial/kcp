@@ -251,7 +251,7 @@ func BindRootAPIs(ctx context.Context, kcpClient kcpclient.Interface, exportName
 			Spec: apisv1alpha1.APIBindingSpec{
 				Reference: apisv1alpha1.ExportReference{
 					Cluster: &apisv1alpha1.ClusterExportReference{
-						Path:       tenancyv1alpha1.RootCluster.String(),
+						Identifier: tenancyv1alpha1.RootCluster,
 						ExportName: exportName,
 					},
 				},

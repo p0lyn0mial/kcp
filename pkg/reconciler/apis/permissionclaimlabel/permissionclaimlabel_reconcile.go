@@ -56,7 +56,7 @@ func (c *controller) reconcile(ctx context.Context, apiBinding *apisv1alpha1.API
 
 	exportClusterName := apiBinding.Spec.Reference.Cluster.Identifier
 	exportName := apiBinding.Spec.Reference.Cluster.ExportName
-	apiExport, err := c.getAPIExport(logicalcluster.New(exportClusterName), exportName)
+	apiExport, err := c.getAPIExport(exportClusterName, exportName)
 	if err != nil {
 		logger.Error(err, "error getting APIExport", "apiExportWorkspace", exportClusterName, "apiExportName", exportName)
 		return nil // nothing we can do

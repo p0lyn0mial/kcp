@@ -190,7 +190,7 @@ func (o *clusterWorkspaceTypeExists) Admit(ctx context.Context, a admission.Attr
 func (o *clusterWorkspaceTypeExists) resolveTypeRef(workspacePath logicalcluster.Name, ref tenancyv1alpha1.ClusterWorkspaceTypeReference) (*tenancyv1alpha1.ClusterWorkspaceType, error) {
 	if ref.Path != "" {
 		cluster := tenancy.TemporaryClusterFrom(logicalcluster.New(ref.Path))
-		cwt, err := o.typeLister.Cluster(cluster.LogicalCluster()).Get(tenancyv1alpha1.ObjectName(ref.Name))
+		cwt, err := o.typeLister.Cluster(cluster.Path()).Get(tenancyv1alpha1.ObjectName(ref.Name))
 		if err != nil {
 			return nil, apierrors.NewInternalError(err)
 		}
@@ -200,7 +200,7 @@ func (o *clusterWorkspaceTypeExists) resolveTypeRef(workspacePath logicalcluster
 
 	for {
 		cluster := tenancy.TemporaryClusterFrom(workspacePath)
-		cwt, err := o.typeLister.Cluster(cluster.LogicalCluster()).Get(tenancyv1alpha1.ObjectName(ref.Name))
+		cwt, err := o.typeLister.Cluster(cluster.Path()).Get(tenancyv1alpha1.ObjectName(ref.Name))
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				var hasParent bool
