@@ -75,7 +75,7 @@ func (c *controller) reconcileBinding(ctx context.Context, apiBinding *apisv1alp
 	logger := klog.FromContext(ctx)
 
 	// Check for valid reference
-	workspaceRef := apiBinding.Spec.Reference.Workspace
+	workspaceRef := apiBinding.Spec.Reference.Cluster
 	if workspaceRef == nil {
 		// this should not happen because of OpenAPI
 		conditions.MarkFalse(
@@ -455,10 +455,10 @@ func generateCRD(schema *apisv1alpha1.APIResourceSchema) (*apiextensionsv1.Custo
 }
 
 func getAPIExportClusterName(apiBinding *apisv1alpha1.APIBinding) (logicalcluster.Name, error) {
-	if apiBinding.Spec.Reference.Workspace == nil {
+	if apiBinding.Spec.Reference.Cluster == nil {
 		// cannot happen due to APIBinding validation
 		return logicalcluster.Name{}, fmt.Errorf("APIBinding does not specify an APIExport")
 	}
 
-	return logicalcluster.New(apiBinding.Spec.Reference.Workspace.Path), nil
+	return logicalcluster.New(apiBinding.Spec.Reference.Cluster.Path), nil
 }

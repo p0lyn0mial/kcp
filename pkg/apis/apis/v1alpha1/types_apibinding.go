@@ -103,24 +103,24 @@ const (
 // ExportReference describes a reference to an APIExport. Exactly one of the
 // fields must be set.
 type ExportReference struct {
-	// workspace is a reference to an APIExport in the same organization. The creator
-	// of the APIBinding needs to have access to the APIExport with the verb `bind`
-	// in order to bind to it.
+	// cluster is a reference to an APIExport by cluster identifier or path and name.
+	// The creator of the APIBinding needs to have access to the APIExport with the
+	// verb `bind` in order to bind to it.
 	//
 	// +optional
-	Workspace *WorkspaceExportReference `json:"workspace,omitempty"`
+	Cluster *ClusterExportReference `json:"absolute,omitempty"`
 }
 
-// WorkspaceExportReference describes an API and backing implementation that are provided by an actor in the
-// specified Workspace.
-type WorkspaceExportReference struct {
-	// path is an absolute reference to a workspace, e.g. root:org:ws.
-	// If it is unset, the path of the APIBinding is used.
+// ClusterExportReference is a reference to an APIExport by cluster and name.
+type ClusterExportReference struct {
+	// path is an absolute logical cluster path where the APIExport is defined.
+	// If identifier and path are unset, the cluster of the APIBinding is used.
+	//
 	// +optional
 	// +kubebuilder:validation:Pattern:="^root(:[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
 	Path string `json:"path,omitempty"`
 
-	// Name of the APIExport that describes the API.
+	// exportName is the name of the APIExport that describes the API.
 	//
 	// +required
 	// +kubebuilder:validation:Required

@@ -116,7 +116,7 @@ func (b *BindOptions) Run(ctx context.Context) error {
 		},
 		Spec: apisv1alpha1.APIBindingSpec{
 			Reference: apisv1alpha1.ExportReference{
-				Workspace: &apisv1alpha1.WorkspaceExportReference{
+				Cluster: &apisv1alpha1.ClusterExportReference{
 					Path:       workspacePath.String(),
 					ExportName: apiExportName,
 				},

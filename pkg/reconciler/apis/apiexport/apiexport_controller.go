@@ -273,11 +273,11 @@ func (c *controller) enqueueFromAPIBinding(obj interface{}) {
 
 	logger := logging.WithObject(logging.WithReconciler(klog.Background(), ControllerName), binding)
 
-	if binding.Spec.Reference.Workspace == nil {
+	if binding.Spec.Reference.Cluster == nil {
 		return
 	}
 
-	key := kcpcache.ToClusterAwareKey(binding.Spec.Reference.Workspace.Path, "", binding.Spec.Reference.Workspace.ExportName)
+	key := kcpcache.ToClusterAwareKey(binding.Spec.Reference.Cluster.Path, "", binding.Spec.Reference.Cluster.ExportName)
 	logging.WithQueueKey(logger, key).V(2).Info("queueing APIExport via APIBinding")
 	c.queue.Add(key)
 }

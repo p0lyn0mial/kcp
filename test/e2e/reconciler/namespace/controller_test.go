@@ -161,7 +161,7 @@ func TestNamespaceScheduler(t *testing.T) {
 					Spec: workloadv1alpha1.SyncTargetSpec{
 						SupportedAPIExports: []apisv1alpha1.ExportReference{
 							{
-								Workspace: &apisv1alpha1.WorkspaceExportReference{
+								Cluster: &apisv1alpha1.ClusterExportReference{
 									ExportName: "kubernetes",
 									Path:       server.clusterName.String(),
 								},

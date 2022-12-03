@@ -90,7 +90,7 @@ func TestAPIBindingAPIExportReferenceImmutability(t *testing.T) {
 		},
 		Spec: apisv1alpha1.APIBindingSpec{
 			Reference: apisv1alpha1.ExportReference{
-				Workspace: &apisv1alpha1.WorkspaceExportReference{
+				Cluster: &apisv1alpha1.ClusterExportReference{
 					Path:       serviceProviderWorkspace.String(),
 					ExportName: "today-cowboys",
 				},
@@ -105,7 +105,7 @@ func TestAPIBindingAPIExportReferenceImmutability(t *testing.T) {
 	require.NoError(t, err)
 
 	patchedBinding := apiBinding.DeepCopy()
-	patchedBinding.Spec.Reference.Workspace.ExportName = "other-export"
+	patchedBinding.Spec.Reference.Cluster.ExportName = "other-export"
 	mergePatch, err := jsonpatch.CreateMergePatch(encodeJSON(t, apiBinding), encodeJSON(t, patchedBinding))
 	require.NoError(t, err)
 	_, err = kcpClusterClient.Cluster(consumerWorkspace).ApisV1alpha1().APIBindings().Patch(ctx, apiBinding.Name, types.MergePatchType, mergePatch, metav1.PatchOptions{})
@@ -186,7 +186,7 @@ func TestAPIBinding(t *testing.T) {
 			},
 			Spec: apisv1alpha1.APIBindingSpec{
 				Reference: apisv1alpha1.ExportReference{
-					Workspace: &apisv1alpha1.WorkspaceExportReference{
+					Cluster: &apisv1alpha1.ClusterExportReference{
 						Path:       providerWorkspace.String(),
 						ExportName: "today-cowboys",
 					},
@@ -259,7 +259,7 @@ func TestAPIBinding(t *testing.T) {
 			},
 			Spec: apisv1alpha1.APIBindingSpec{
 				Reference: apisv1alpha1.ExportReference{
-					Workspace: &apisv1alpha1.WorkspaceExportReference{
+					Cluster: &apisv1alpha1.ClusterExportReference{
 						Path:       serviceProvider2Workspace.String(),
 						ExportName: "today-cowboys",
 					},

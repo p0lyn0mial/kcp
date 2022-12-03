@@ -56,14 +56,14 @@ func ValidateAPIBindingReference(reference apisv1alpha1.ExportReference, path *f
 	allErrs := field.ErrorList{}
 
 	// For now, workspace is required via OpenAPI. But just in case...
-	if workspace := reference.Workspace; workspace != nil {
+	if reference.Cluster != nil {
 		// These are required by OpenAPI, but just in case...
-		if workspace.Path == "" {
-			allErrs = append(allErrs, field.Required(path.Child("workspace").Child("path"), ""))
+		if reference.Cluster.Path == "" {
+			allErrs = append(allErrs, field.Required(path.Child("cluster").Child("path"), ""))
 		}
 
-		if workspace.ExportName == "" {
-			allErrs = append(allErrs, field.Required(path.Child("workspace").Child("exportName"), ""))
+		if reference.Cluster.ExportName == "" {
+			allErrs = append(allErrs, field.Required(path.Child("cluster").Child("exportName"), ""))
 		}
 	}
 

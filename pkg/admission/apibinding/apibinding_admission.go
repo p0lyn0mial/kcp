@@ -84,7 +84,7 @@ func (o *apiBindingAdmission) Admit(ctx context.Context, a admission.Attributes,
 		return fmt.Errorf("failed to convert unstructured to APIBinding: %w", err)
 	}
 
-	if apiBinding.Spec.Reference.Workspace == nil {
+	if apiBinding.Spec.Reference.Cluster == nil {
 		return nil
 	}
 
@@ -93,20 +93,20 @@ func (o *apiBindingAdmission) Admit(ctx context.Context, a admission.Attributes,
 	if err != nil {
 		return admission.NewForbidden(a, fmt.Errorf("error determining workspace: %w", err))
 	}
-	if apiBinding.Spec.Reference.Workspace.Path == "" {
-		apiBinding.Spec.Reference.Workspace.Path = cluster.Name.String()
+	if apiBinding.Spec.Reference.Cluster.Path == "" {
+		apiBinding.Spec.Reference.Cluster.Path = cluster.Name.String()
 	}
 
 	// set labels
-	if apiBinding.Spec.Reference.Workspace == nil {
+	if apiBinding.Spec.Reference.Cluster == nil {
 		delete(apiBinding.Labels, apisv1alpha1.InternalAPIBindingExportLabelKey)
 	} else {
 		if apiBinding.Labels == nil {
 			apiBinding.Labels = make(map[string]string)
 		}
 		apiBinding.Labels[apisv1alpha1.InternalAPIBindingExportLabelKey] = permissionclaims.ToAPIBindingExportLabelValue(
-			logicalcluster.New(apiBinding.Spec.Reference.Workspace.Path),
-			apiBinding.Spec.Reference.Workspace.ExportName,
+			logicalcluster.New(apiBinding.Spec.Reference.Cluster.Path),
+			apiBinding.Spec.Reference.Cluster.ExportName,
 		)
 	}
 
@@ -138,8 +138,8 @@ func (o *apiBindingAdmission) Validate(ctx context.Context, a admission.Attribut
 	}
 
 	// Return early if there's nothing to validate (but this should never happen because it's required via OpenAPI).
-	if apiBinding.Spec.Reference.Workspace == nil {
-		return admission.NewForbidden(a, fmt.Errorf(".spec.reference.workspace is required"))
+	if apiBinding.Spec.Reference.Cluster == nil {
+		return admission.NewForbidden(a, fmt.Errorf(".spec.reference.cluster is required"))
 	}
 
 	// Object validation
@@ -165,23 +165,23 @@ func (o *apiBindingAdmission) Validate(ctx context.Context, a admission.Attribut
 	}
 
 	// Verify the workspace reference.
-	if apiBinding.Spec.Reference.Workspace.Path == "" {
+	if apiBinding.Spec.Reference.Cluster.Path == "" {
 		return admission.NewForbidden(a, fmt.Errorf("workspace reference is missing")) // this should not happen due to validation
 	}
 
 	// Verify the labels
 	value, found := apiBinding.Labels[apisv1alpha1.InternalAPIBindingExportLabelKey]
-	if apiBinding.Spec.Reference.Workspace == nil && found {
+	if apiBinding.Spec.Reference.Cluster == nil && found {
 		return admission.NewForbidden(a, field.Invalid(field.NewPath("metadata").Child("labels").Key(apisv1alpha1.InternalAPIBindingExportLabelKey), value, "must not be set"))
 	} else if expected := permissionclaims.ToAPIBindingExportLabelValue(
-		logicalcluster.New(apiBinding.Spec.Reference.Workspace.Path),
-		apiBinding.Spec.Reference.Workspace.ExportName,
+		logicalcluster.New(apiBinding.Spec.Reference.Cluster.Path),
+		apiBinding.Spec.Reference.Cluster.ExportName,
 	); value != expected {
 		return admission.NewForbidden(a, field.Invalid(field.NewPath("metadata").Child("labels").Key(apisv1alpha1.InternalAPIBindingExportLabelKey), value, fmt.Sprintf("must be set to %q", expected)))
 	}
 
 	// Access check
-	if err := o.checkAPIExportAccess(ctx, a.GetUserInfo(), logicalcluster.New(apiBinding.Spec.Reference.Workspace.Path), apiBinding.Spec.Reference.Workspace.ExportName); err != nil {
+	if err := o.checkAPIExportAccess(ctx, a.GetUserInfo(), logicalcluster.New(apiBinding.Spec.Reference.Cluster.Path), apiBinding.Spec.Reference.Cluster.ExportName); err != nil {
 		action := "create"
 		if a.GetOperation() == admission.Update {
 			action = "update"

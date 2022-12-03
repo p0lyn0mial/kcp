@@ -54,7 +54,7 @@ func TestIndexAPIBindingByWorkspaceExport(t *testing.T) {
 				},
 				Spec: apisv1alpha1.APIBindingSpec{
 					Reference: apisv1alpha1.ExportReference{
-						Workspace: &apisv1alpha1.WorkspaceExportReference{
+						Cluster: &apisv1alpha1.ClusterExportReference{
 							Path:       "root:workspace1",
 							ExportName: "export1",
 						},
