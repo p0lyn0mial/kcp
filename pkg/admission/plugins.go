@@ -51,6 +51,7 @@ import (
 	kcplimitranger "github.com/kcp-dev/kcp/pkg/admission/limitranger"
 	kcpmutatingwebhook "github.com/kcp-dev/kcp/pkg/admission/mutatingwebhook"
 	workspacenamespacelifecycle "github.com/kcp-dev/kcp/pkg/admission/namespacelifecycle"
+	"github.com/kcp-dev/kcp/pkg/admission/pathannotation"
 	"github.com/kcp-dev/kcp/pkg/admission/permissionclaims"
 	"github.com/kcp-dev/kcp/pkg/admission/reservedcrdannotations"
 	"github.com/kcp-dev/kcp/pkg/admission/reservedcrdgroups"
@@ -122,6 +123,7 @@ func RegisterAllKcpAdmissionPlugins(plugins *admission.Plugins) {
 	crdnooverlappinggvr.Register(plugins)
 	reservedmetadata.Register(plugins)
 	permissionclaims.Register(plugins)
+	pathannotation.Register(plugins)
 	kubequota.Register(plugins)
 }
 
@@ -149,6 +151,7 @@ var defaultOnPluginsInKcp = sets.NewString(
 	reservedcrdgroups.PluginName,
 	reservednames.PluginName,
 	permissionclaims.PluginName,
+	pathannotation.PluginName,
 	kubequota.PluginName,
 )
 
