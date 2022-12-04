@@ -219,7 +219,7 @@ func (h *homeWorkspaceHandler) ServeHTTP(rw http.ResponseWriter, req *http.Reque
 			return
 		}
 
-		// nothing to check permission-wise. If there is a very improbable hash conflict, the will get a 403
+		// nothing to check permission-wise. If there is a very improbable hash conflict, the user will get a 403
 		// through normal authorization. We don't give access to legacy home workspaces to new users here.
 
 		homeWorkspace := &tenancyv1beta1.Workspace{
