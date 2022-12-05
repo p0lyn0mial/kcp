@@ -25,7 +25,7 @@ import (
 	"context"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -43,7 +43,7 @@ type LocationsClusterGetter interface {
 // LocationClusterInterface can operate on Locations across all clusters,
 // or scope down to one cluster and return a schedulingv1alpha1client.LocationInterface.
 type LocationClusterInterface interface {
-	Cluster(logicalcluster.Name) schedulingv1alpha1client.LocationInterface
+	Cluster(logicalcluster.Path) schedulingv1alpha1client.LocationInterface
 	List(ctx context.Context, opts metav1.ListOptions) (*schedulingv1alpha1.LocationList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -53,20 +53,20 @@ type locationsClusterInterface struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *locationsClusterInterface) Cluster(name logicalcluster.Name) schedulingv1alpha1client.LocationInterface {
-	if name == logicalcluster.Wildcard {
+func (c *locationsClusterInterface) Cluster(path logicalcluster.Path) schedulingv1alpha1client.LocationInterface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
-	return c.clientCache.ClusterOrDie(name).Locations()
+	return c.clientCache.ClusterOrDie(path).Locations()
 }
 
 // List returns the entire collection of all Locations across all clusters.
 func (c *locationsClusterInterface) List(ctx context.Context, opts metav1.ListOptions) (*schedulingv1alpha1.LocationList, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).Locations().List(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).Locations().List(ctx, opts)
 }
 
 // Watch begins to watch all Locations across all clusters.
 func (c *locationsClusterInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).Locations().Watch(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).Locations().Watch(ctx, opts)
 }

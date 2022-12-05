@@ -25,7 +25,7 @@ import (
 	"context"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -43,7 +43,7 @@ type SyncTargetsClusterGetter interface {
 // SyncTargetClusterInterface can operate on SyncTargets across all clusters,
 // or scope down to one cluster and return a workloadv1alpha1client.SyncTargetInterface.
 type SyncTargetClusterInterface interface {
-	Cluster(logicalcluster.Name) workloadv1alpha1client.SyncTargetInterface
+	Cluster(logicalcluster.Path) workloadv1alpha1client.SyncTargetInterface
 	List(ctx context.Context, opts metav1.ListOptions) (*workloadv1alpha1.SyncTargetList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -53,20 +53,20 @@ type syncTargetsClusterInterface struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *syncTargetsClusterInterface) Cluster(name logicalcluster.Name) workloadv1alpha1client.SyncTargetInterface {
-	if name == logicalcluster.Wildcard {
+func (c *syncTargetsClusterInterface) Cluster(path logicalcluster.Path) workloadv1alpha1client.SyncTargetInterface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
-	return c.clientCache.ClusterOrDie(name).SyncTargets()
+	return c.clientCache.ClusterOrDie(path).SyncTargets()
 }
 
 // List returns the entire collection of all SyncTargets across all clusters.
 func (c *syncTargetsClusterInterface) List(ctx context.Context, opts metav1.ListOptions) (*workloadv1alpha1.SyncTargetList, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).SyncTargets().List(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).SyncTargets().List(ctx, opts)
 }
 
 // Watch begins to watch all SyncTargets across all clusters.
 func (c *syncTargetsClusterInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).SyncTargets().Watch(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).SyncTargets().Watch(ctx, opts)
 }

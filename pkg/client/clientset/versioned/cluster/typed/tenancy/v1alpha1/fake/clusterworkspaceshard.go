@@ -24,7 +24,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	kcptesting "github.com/kcp-dev/client-go/third_party/k8s.io/client-go/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,8 +46,8 @@ type clusterWorkspaceShardsClusterClient struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *clusterWorkspaceShardsClusterClient) Cluster(cluster logicalcluster.Name) tenancyv1alpha1client.ClusterWorkspaceShardInterface {
-	if cluster == logicalcluster.Wildcard {
+func (c *clusterWorkspaceShardsClusterClient) Cluster(cluster logicalcluster.Path) tenancyv1alpha1client.ClusterWorkspaceShardInterface {
+	if cluster == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
@@ -56,7 +56,7 @@ func (c *clusterWorkspaceShardsClusterClient) Cluster(cluster logicalcluster.Nam
 
 // List takes label and field selectors, and returns the list of ClusterWorkspaceShards that match those selectors across all clusters.
 func (c *clusterWorkspaceShardsClusterClient) List(ctx context.Context, opts metav1.ListOptions) (*tenancyv1alpha1.ClusterWorkspaceShardList, error) {
-	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(clusterWorkspaceShardsResource, clusterWorkspaceShardsKind, logicalcluster.Wildcard, opts), &tenancyv1alpha1.ClusterWorkspaceShardList{})
+	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(clusterWorkspaceShardsResource, clusterWorkspaceShardsKind, logicalcluster.WildcardPath, opts), &tenancyv1alpha1.ClusterWorkspaceShardList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func (c *clusterWorkspaceShardsClusterClient) List(ctx context.Context, opts met
 
 // Watch returns a watch.Interface that watches the requested ClusterWorkspaceShards across all clusters.
 func (c *clusterWorkspaceShardsClusterClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(clusterWorkspaceShardsResource, logicalcluster.Wildcard, opts))
+	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(clusterWorkspaceShardsResource, logicalcluster.WildcardPath, opts))
 }
 
 type clusterWorkspaceShardsClient struct {
 	*kcptesting.Fake
-	Cluster logicalcluster.Name
+	Cluster logicalcluster.Path
 }
 
 func (c *clusterWorkspaceShardsClient) Create(ctx context.Context, clusterWorkspaceShard *tenancyv1alpha1.ClusterWorkspaceShard, opts metav1.CreateOptions) (*tenancyv1alpha1.ClusterWorkspaceShard, error) {

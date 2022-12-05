@@ -24,7 +24,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	kcptesting "github.com/kcp-dev/client-go/third_party/k8s.io/client-go/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,8 +46,8 @@ type negotiatedAPIResourcesClusterClient struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *negotiatedAPIResourcesClusterClient) Cluster(cluster logicalcluster.Name) apiresourcev1alpha1client.NegotiatedAPIResourceInterface {
-	if cluster == logicalcluster.Wildcard {
+func (c *negotiatedAPIResourcesClusterClient) Cluster(cluster logicalcluster.Path) apiresourcev1alpha1client.NegotiatedAPIResourceInterface {
+	if cluster == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
@@ -56,7 +56,7 @@ func (c *negotiatedAPIResourcesClusterClient) Cluster(cluster logicalcluster.Nam
 
 // List takes label and field selectors, and returns the list of NegotiatedAPIResources that match those selectors across all clusters.
 func (c *negotiatedAPIResourcesClusterClient) List(ctx context.Context, opts metav1.ListOptions) (*apiresourcev1alpha1.NegotiatedAPIResourceList, error) {
-	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(negotiatedAPIResourcesResource, negotiatedAPIResourcesKind, logicalcluster.Wildcard, opts), &apiresourcev1alpha1.NegotiatedAPIResourceList{})
+	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(negotiatedAPIResourcesResource, negotiatedAPIResourcesKind, logicalcluster.WildcardPath, opts), &apiresourcev1alpha1.NegotiatedAPIResourceList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func (c *negotiatedAPIResourcesClusterClient) List(ctx context.Context, opts met
 
 // Watch returns a watch.Interface that watches the requested NegotiatedAPIResources across all clusters.
 func (c *negotiatedAPIResourcesClusterClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(negotiatedAPIResourcesResource, logicalcluster.Wildcard, opts))
+	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(negotiatedAPIResourcesResource, logicalcluster.WildcardPath, opts))
 }
 
 type negotiatedAPIResourcesClient struct {
 	*kcptesting.Fake
-	Cluster logicalcluster.Name
+	Cluster logicalcluster.Path
 }
 
 func (c *negotiatedAPIResourcesClient) Create(ctx context.Context, negotiatedAPIResource *apiresourcev1alpha1.NegotiatedAPIResource, opts metav1.CreateOptions) (*apiresourcev1alpha1.NegotiatedAPIResource, error) {

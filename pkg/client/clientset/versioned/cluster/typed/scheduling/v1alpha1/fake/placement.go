@@ -24,7 +24,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	kcptesting "github.com/kcp-dev/client-go/third_party/k8s.io/client-go/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,8 +46,8 @@ type placementsClusterClient struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *placementsClusterClient) Cluster(cluster logicalcluster.Name) schedulingv1alpha1client.PlacementInterface {
-	if cluster == logicalcluster.Wildcard {
+func (c *placementsClusterClient) Cluster(cluster logicalcluster.Path) schedulingv1alpha1client.PlacementInterface {
+	if cluster == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
@@ -56,7 +56,7 @@ func (c *placementsClusterClient) Cluster(cluster logicalcluster.Name) schedulin
 
 // List takes label and field selectors, and returns the list of Placements that match those selectors across all clusters.
 func (c *placementsClusterClient) List(ctx context.Context, opts metav1.ListOptions) (*schedulingv1alpha1.PlacementList, error) {
-	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(placementsResource, placementsKind, logicalcluster.Wildcard, opts), &schedulingv1alpha1.PlacementList{})
+	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(placementsResource, placementsKind, logicalcluster.WildcardPath, opts), &schedulingv1alpha1.PlacementList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func (c *placementsClusterClient) List(ctx context.Context, opts metav1.ListOpti
 
 // Watch returns a watch.Interface that watches the requested Placements across all clusters.
 func (c *placementsClusterClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(placementsResource, logicalcluster.Wildcard, opts))
+	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(placementsResource, logicalcluster.WildcardPath, opts))
 }
 
 type placementsClient struct {
 	*kcptesting.Fake
-	Cluster logicalcluster.Name
+	Cluster logicalcluster.Path
 }
 
 func (c *placementsClient) Create(ctx context.Context, placement *schedulingv1alpha1.Placement, opts metav1.CreateOptions) (*schedulingv1alpha1.Placement, error) {

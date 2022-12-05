@@ -24,7 +24,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	kcptesting "github.com/kcp-dev/client-go/third_party/k8s.io/client-go/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,8 +46,8 @@ type aPIExportsClusterClient struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *aPIExportsClusterClient) Cluster(cluster logicalcluster.Name) apisv1alpha1client.APIExportInterface {
-	if cluster == logicalcluster.Wildcard {
+func (c *aPIExportsClusterClient) Cluster(cluster logicalcluster.Path) apisv1alpha1client.APIExportInterface {
+	if cluster == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
@@ -56,7 +56,7 @@ func (c *aPIExportsClusterClient) Cluster(cluster logicalcluster.Name) apisv1alp
 
 // List takes label and field selectors, and returns the list of APIExports that match those selectors across all clusters.
 func (c *aPIExportsClusterClient) List(ctx context.Context, opts metav1.ListOptions) (*apisv1alpha1.APIExportList, error) {
-	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(aPIExportsResource, aPIExportsKind, logicalcluster.Wildcard, opts), &apisv1alpha1.APIExportList{})
+	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(aPIExportsResource, aPIExportsKind, logicalcluster.WildcardPath, opts), &apisv1alpha1.APIExportList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func (c *aPIExportsClusterClient) List(ctx context.Context, opts metav1.ListOpti
 
 // Watch returns a watch.Interface that watches the requested APIExports across all clusters.
 func (c *aPIExportsClusterClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(aPIExportsResource, logicalcluster.Wildcard, opts))
+	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(aPIExportsResource, logicalcluster.WildcardPath, opts))
 }
 
 type aPIExportsClient struct {
 	*kcptesting.Fake
-	Cluster logicalcluster.Name
+	Cluster logicalcluster.Path
 }
 
 func (c *aPIExportsClient) Create(ctx context.Context, aPIExport *apisv1alpha1.APIExport, opts metav1.CreateOptions) (*apisv1alpha1.APIExport, error) {

@@ -25,7 +25,7 @@ import (
 	"context"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -43,7 +43,7 @@ type ClusterWorkspacesClusterGetter interface {
 // ClusterWorkspaceClusterInterface can operate on ClusterWorkspaces across all clusters,
 // or scope down to one cluster and return a tenancyv1alpha1client.ClusterWorkspaceInterface.
 type ClusterWorkspaceClusterInterface interface {
-	Cluster(logicalcluster.Name) tenancyv1alpha1client.ClusterWorkspaceInterface
+	Cluster(logicalcluster.Path) tenancyv1alpha1client.ClusterWorkspaceInterface
 	List(ctx context.Context, opts metav1.ListOptions) (*tenancyv1alpha1.ClusterWorkspaceList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -53,20 +53,20 @@ type clusterWorkspacesClusterInterface struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *clusterWorkspacesClusterInterface) Cluster(name logicalcluster.Name) tenancyv1alpha1client.ClusterWorkspaceInterface {
-	if name == logicalcluster.Wildcard {
+func (c *clusterWorkspacesClusterInterface) Cluster(path logicalcluster.Path) tenancyv1alpha1client.ClusterWorkspaceInterface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
-	return c.clientCache.ClusterOrDie(name).ClusterWorkspaces()
+	return c.clientCache.ClusterOrDie(path).ClusterWorkspaces()
 }
 
 // List returns the entire collection of all ClusterWorkspaces across all clusters.
 func (c *clusterWorkspacesClusterInterface) List(ctx context.Context, opts metav1.ListOptions) (*tenancyv1alpha1.ClusterWorkspaceList, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).ClusterWorkspaces().List(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).ClusterWorkspaces().List(ctx, opts)
 }
 
 // Watch begins to watch all ClusterWorkspaces across all clusters.
 func (c *clusterWorkspacesClusterInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).ClusterWorkspaces().Watch(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).ClusterWorkspaces().Watch(ctx, opts)
 }

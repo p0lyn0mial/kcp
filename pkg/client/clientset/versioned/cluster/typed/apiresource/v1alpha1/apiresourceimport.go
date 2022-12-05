@@ -25,7 +25,7 @@ import (
 	"context"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -43,7 +43,7 @@ type APIResourceImportsClusterGetter interface {
 // APIResourceImportClusterInterface can operate on APIResourceImports across all clusters,
 // or scope down to one cluster and return a apiresourcev1alpha1client.APIResourceImportInterface.
 type APIResourceImportClusterInterface interface {
-	Cluster(logicalcluster.Name) apiresourcev1alpha1client.APIResourceImportInterface
+	Cluster(logicalcluster.Path) apiresourcev1alpha1client.APIResourceImportInterface
 	List(ctx context.Context, opts metav1.ListOptions) (*apiresourcev1alpha1.APIResourceImportList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -53,20 +53,20 @@ type aPIResourceImportsClusterInterface struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *aPIResourceImportsClusterInterface) Cluster(name logicalcluster.Name) apiresourcev1alpha1client.APIResourceImportInterface {
-	if name == logicalcluster.Wildcard {
+func (c *aPIResourceImportsClusterInterface) Cluster(path logicalcluster.Path) apiresourcev1alpha1client.APIResourceImportInterface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
-	return c.clientCache.ClusterOrDie(name).APIResourceImports()
+	return c.clientCache.ClusterOrDie(path).APIResourceImports()
 }
 
 // List returns the entire collection of all APIResourceImports across all clusters.
 func (c *aPIResourceImportsClusterInterface) List(ctx context.Context, opts metav1.ListOptions) (*apiresourcev1alpha1.APIResourceImportList, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).APIResourceImports().List(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).APIResourceImports().List(ctx, opts)
 }
 
 // Watch begins to watch all APIResourceImports across all clusters.
 func (c *aPIResourceImportsClusterInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).APIResourceImports().Watch(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).APIResourceImports().Watch(ctx, opts)
 }

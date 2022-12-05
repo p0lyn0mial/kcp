@@ -25,7 +25,7 @@ import (
 	"net/http"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	"k8s.io/client-go/rest"
 
@@ -38,18 +38,18 @@ type WildwestV1alpha1ClusterInterface interface {
 }
 
 type WildwestV1alpha1ClusterScoper interface {
-	Cluster(logicalcluster.Name) wildwestv1alpha1.WildwestV1alpha1Interface
+	Cluster(logicalcluster.Path) wildwestv1alpha1.WildwestV1alpha1Interface
 }
 
 type WildwestV1alpha1ClusterClient struct {
 	clientCache kcpclient.Cache[*wildwestv1alpha1.WildwestV1alpha1Client]
 }
 
-func (c *WildwestV1alpha1ClusterClient) Cluster(name logicalcluster.Name) wildwestv1alpha1.WildwestV1alpha1Interface {
-	if name == logicalcluster.Wildcard {
+func (c *WildwestV1alpha1ClusterClient) Cluster(path logicalcluster.Path) wildwestv1alpha1.WildwestV1alpha1Interface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
-	return c.clientCache.ClusterOrDie(name)
+	return c.clientCache.ClusterOrDie(path)
 }
 
 func (c *WildwestV1alpha1ClusterClient) Cowboys() CowboyClusterInterface {

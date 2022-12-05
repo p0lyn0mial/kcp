@@ -25,7 +25,7 @@ import (
 	"context"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -43,7 +43,7 @@ type APIBindingsClusterGetter interface {
 // APIBindingClusterInterface can operate on APIBindings across all clusters,
 // or scope down to one cluster and return a apisv1alpha1client.APIBindingInterface.
 type APIBindingClusterInterface interface {
-	Cluster(logicalcluster.Name) apisv1alpha1client.APIBindingInterface
+	Cluster(logicalcluster.Path) apisv1alpha1client.APIBindingInterface
 	List(ctx context.Context, opts metav1.ListOptions) (*apisv1alpha1.APIBindingList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -53,20 +53,20 @@ type aPIBindingsClusterInterface struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *aPIBindingsClusterInterface) Cluster(name logicalcluster.Name) apisv1alpha1client.APIBindingInterface {
-	if name == logicalcluster.Wildcard {
+func (c *aPIBindingsClusterInterface) Cluster(path logicalcluster.Path) apisv1alpha1client.APIBindingInterface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
-	return c.clientCache.ClusterOrDie(name).APIBindings()
+	return c.clientCache.ClusterOrDie(path).APIBindings()
 }
 
 // List returns the entire collection of all APIBindings across all clusters.
 func (c *aPIBindingsClusterInterface) List(ctx context.Context, opts metav1.ListOptions) (*apisv1alpha1.APIBindingList, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).APIBindings().List(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).APIBindings().List(ctx, opts)
 }
 
 // Watch begins to watch all APIBindings across all clusters.
 func (c *aPIBindingsClusterInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).APIBindings().Watch(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).APIBindings().Watch(ctx, opts)
 }

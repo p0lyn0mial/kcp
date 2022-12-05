@@ -24,7 +24,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	kcptesting "github.com/kcp-dev/client-go/third_party/k8s.io/client-go/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,8 +47,8 @@ type cowboysClusterClient struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *cowboysClusterClient) Cluster(cluster logicalcluster.Name) kcpwildwestv1alpha1.CowboysNamespacer {
-	if cluster == logicalcluster.Wildcard {
+func (c *cowboysClusterClient) Cluster(cluster logicalcluster.Path) kcpwildwestv1alpha1.CowboysNamespacer {
+	if cluster == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
@@ -57,7 +57,7 @@ func (c *cowboysClusterClient) Cluster(cluster logicalcluster.Name) kcpwildwestv
 
 // List takes label and field selectors, and returns the list of Cowboys that match those selectors across all clusters.
 func (c *cowboysClusterClient) List(ctx context.Context, opts metav1.ListOptions) (*wildwestv1alpha1.CowboyList, error) {
-	obj, err := c.Fake.Invokes(kcptesting.NewListAction(cowboysResource, cowboysKind, logicalcluster.Wildcard, metav1.NamespaceAll, opts), &wildwestv1alpha1.CowboyList{})
+	obj, err := c.Fake.Invokes(kcptesting.NewListAction(cowboysResource, cowboysKind, logicalcluster.WildcardPath, metav1.NamespaceAll, opts), &wildwestv1alpha1.CowboyList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -77,12 +77,12 @@ func (c *cowboysClusterClient) List(ctx context.Context, opts metav1.ListOptions
 
 // Watch returns a watch.Interface that watches the requested Cowboys across all clusters.
 func (c *cowboysClusterClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.InvokesWatch(kcptesting.NewWatchAction(cowboysResource, logicalcluster.Wildcard, metav1.NamespaceAll, opts))
+	return c.Fake.InvokesWatch(kcptesting.NewWatchAction(cowboysResource, logicalcluster.WildcardPath, metav1.NamespaceAll, opts))
 }
 
 type cowboysNamespacer struct {
 	*kcptesting.Fake
-	Cluster logicalcluster.Name
+	Cluster logicalcluster.Path
 }
 
 func (n *cowboysNamespacer) Namespace(namespace string) wildwestv1alpha1client.CowboyInterface {
@@ -91,7 +91,7 @@ func (n *cowboysNamespacer) Namespace(namespace string) wildwestv1alpha1client.C
 
 type cowboysClient struct {
 	*kcptesting.Fake
-	Cluster   logicalcluster.Name
+	Cluster   logicalcluster.Path
 	Namespace string
 }
 

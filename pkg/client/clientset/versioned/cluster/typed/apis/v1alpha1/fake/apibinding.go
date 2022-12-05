@@ -24,7 +24,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	kcptesting "github.com/kcp-dev/client-go/third_party/k8s.io/client-go/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,8 +46,8 @@ type aPIBindingsClusterClient struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *aPIBindingsClusterClient) Cluster(cluster logicalcluster.Name) apisv1alpha1client.APIBindingInterface {
-	if cluster == logicalcluster.Wildcard {
+func (c *aPIBindingsClusterClient) Cluster(cluster logicalcluster.Path) apisv1alpha1client.APIBindingInterface {
+	if cluster == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
@@ -56,7 +56,7 @@ func (c *aPIBindingsClusterClient) Cluster(cluster logicalcluster.Name) apisv1al
 
 // List takes label and field selectors, and returns the list of APIBindings that match those selectors across all clusters.
 func (c *aPIBindingsClusterClient) List(ctx context.Context, opts metav1.ListOptions) (*apisv1alpha1.APIBindingList, error) {
-	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(aPIBindingsResource, aPIBindingsKind, logicalcluster.Wildcard, opts), &apisv1alpha1.APIBindingList{})
+	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(aPIBindingsResource, aPIBindingsKind, logicalcluster.WildcardPath, opts), &apisv1alpha1.APIBindingList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func (c *aPIBindingsClusterClient) List(ctx context.Context, opts metav1.ListOpt
 
 // Watch returns a watch.Interface that watches the requested APIBindings across all clusters.
 func (c *aPIBindingsClusterClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(aPIBindingsResource, logicalcluster.Wildcard, opts))
+	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(aPIBindingsResource, logicalcluster.WildcardPath, opts))
 }
 
 type aPIBindingsClient struct {
 	*kcptesting.Fake
-	Cluster logicalcluster.Name
+	Cluster logicalcluster.Path
 }
 
 func (c *aPIBindingsClient) Create(ctx context.Context, aPIBinding *apisv1alpha1.APIBinding, opts metav1.CreateOptions) (*apisv1alpha1.APIBinding, error) {

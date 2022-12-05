@@ -24,7 +24,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	kcptesting "github.com/kcp-dev/client-go/third_party/k8s.io/client-go/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,8 +46,8 @@ type aPIResourceImportsClusterClient struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *aPIResourceImportsClusterClient) Cluster(cluster logicalcluster.Name) apiresourcev1alpha1client.APIResourceImportInterface {
-	if cluster == logicalcluster.Wildcard {
+func (c *aPIResourceImportsClusterClient) Cluster(cluster logicalcluster.Path) apiresourcev1alpha1client.APIResourceImportInterface {
+	if cluster == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
@@ -56,7 +56,7 @@ func (c *aPIResourceImportsClusterClient) Cluster(cluster logicalcluster.Name) a
 
 // List takes label and field selectors, and returns the list of APIResourceImports that match those selectors across all clusters.
 func (c *aPIResourceImportsClusterClient) List(ctx context.Context, opts metav1.ListOptions) (*apiresourcev1alpha1.APIResourceImportList, error) {
-	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(aPIResourceImportsResource, aPIResourceImportsKind, logicalcluster.Wildcard, opts), &apiresourcev1alpha1.APIResourceImportList{})
+	obj, err := c.Fake.Invokes(kcptesting.NewRootListAction(aPIResourceImportsResource, aPIResourceImportsKind, logicalcluster.WildcardPath, opts), &apiresourcev1alpha1.APIResourceImportList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func (c *aPIResourceImportsClusterClient) List(ctx context.Context, opts metav1.
 
 // Watch returns a watch.Interface that watches the requested APIResourceImports across all clusters.
 func (c *aPIResourceImportsClusterClient) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(aPIResourceImportsResource, logicalcluster.Wildcard, opts))
+	return c.Fake.InvokesWatch(kcptesting.NewRootWatchAction(aPIResourceImportsResource, logicalcluster.WildcardPath, opts))
 }
 
 type aPIResourceImportsClient struct {
 	*kcptesting.Fake
-	Cluster logicalcluster.Name
+	Cluster logicalcluster.Path
 }
 
 func (c *aPIResourceImportsClient) Create(ctx context.Context, aPIResourceImport *apiresourcev1alpha1.APIResourceImport, opts metav1.CreateOptions) (*apiresourcev1alpha1.APIResourceImport, error) {

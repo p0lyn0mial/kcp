@@ -25,7 +25,7 @@ import (
 	"context"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -43,7 +43,7 @@ type APIResourceSchemasClusterGetter interface {
 // APIResourceSchemaClusterInterface can operate on APIResourceSchemas across all clusters,
 // or scope down to one cluster and return a apisv1alpha1client.APIResourceSchemaInterface.
 type APIResourceSchemaClusterInterface interface {
-	Cluster(logicalcluster.Name) apisv1alpha1client.APIResourceSchemaInterface
+	Cluster(logicalcluster.Path) apisv1alpha1client.APIResourceSchemaInterface
 	List(ctx context.Context, opts metav1.ListOptions) (*apisv1alpha1.APIResourceSchemaList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -53,20 +53,20 @@ type aPIResourceSchemasClusterInterface struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *aPIResourceSchemasClusterInterface) Cluster(name logicalcluster.Name) apisv1alpha1client.APIResourceSchemaInterface {
-	if name == logicalcluster.Wildcard {
+func (c *aPIResourceSchemasClusterInterface) Cluster(path logicalcluster.Path) apisv1alpha1client.APIResourceSchemaInterface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
-	return c.clientCache.ClusterOrDie(name).APIResourceSchemas()
+	return c.clientCache.ClusterOrDie(path).APIResourceSchemas()
 }
 
 // List returns the entire collection of all APIResourceSchemas across all clusters.
 func (c *aPIResourceSchemasClusterInterface) List(ctx context.Context, opts metav1.ListOptions) (*apisv1alpha1.APIResourceSchemaList, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).APIResourceSchemas().List(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).APIResourceSchemas().List(ctx, opts)
 }
 
 // Watch begins to watch all APIResourceSchemas across all clusters.
 func (c *aPIResourceSchemasClusterInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).APIResourceSchemas().Watch(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).APIResourceSchemas().Watch(ctx, opts)
 }

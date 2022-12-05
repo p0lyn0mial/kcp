@@ -25,7 +25,7 @@ import (
 	"context"
 
 	kcpclient "github.com/kcp-dev/apimachinery/pkg/client"
-	"github.com/kcp-dev/logicalcluster/v2"
+	"github.com/kcp-dev/logicalcluster/v3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -43,7 +43,7 @@ type NegotiatedAPIResourcesClusterGetter interface {
 // NegotiatedAPIResourceClusterInterface can operate on NegotiatedAPIResources across all clusters,
 // or scope down to one cluster and return a apiresourcev1alpha1client.NegotiatedAPIResourceInterface.
 type NegotiatedAPIResourceClusterInterface interface {
-	Cluster(logicalcluster.Name) apiresourcev1alpha1client.NegotiatedAPIResourceInterface
+	Cluster(logicalcluster.Path) apiresourcev1alpha1client.NegotiatedAPIResourceInterface
 	List(ctx context.Context, opts metav1.ListOptions) (*apiresourcev1alpha1.NegotiatedAPIResourceList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -53,20 +53,20 @@ type negotiatedAPIResourcesClusterInterface struct {
 }
 
 // Cluster scopes the client down to a particular cluster.
-func (c *negotiatedAPIResourcesClusterInterface) Cluster(name logicalcluster.Name) apiresourcev1alpha1client.NegotiatedAPIResourceInterface {
-	if name == logicalcluster.Wildcard {
+func (c *negotiatedAPIResourcesClusterInterface) Cluster(path logicalcluster.Path) apiresourcev1alpha1client.NegotiatedAPIResourceInterface {
+	if path == logicalcluster.WildcardPath {
 		panic("A specific cluster must be provided when scoping, not the wildcard.")
 	}
 
-	return c.clientCache.ClusterOrDie(name).NegotiatedAPIResources()
+	return c.clientCache.ClusterOrDie(path).NegotiatedAPIResources()
 }
 
 // List returns the entire collection of all NegotiatedAPIResources across all clusters.
 func (c *negotiatedAPIResourcesClusterInterface) List(ctx context.Context, opts metav1.ListOptions) (*apiresourcev1alpha1.NegotiatedAPIResourceList, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).NegotiatedAPIResources().List(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).NegotiatedAPIResources().List(ctx, opts)
 }
 
 // Watch begins to watch all NegotiatedAPIResources across all clusters.
 func (c *negotiatedAPIResourcesClusterInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.clientCache.ClusterOrDie(logicalcluster.Wildcard).NegotiatedAPIResources().Watch(ctx, opts)
+	return c.clientCache.ClusterOrDie(logicalcluster.WildcardPath).NegotiatedAPIResources().Watch(ctx, opts)
 }
