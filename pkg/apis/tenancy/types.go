@@ -43,7 +43,7 @@ type Object interface {
 // +kubebuilder:validation:Pattern:="^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
 type Cluster string
 
-func (c Cluster) Path() logicalcluster.Name {
+func (c Cluster) Path() logicalcluster.Path {
 	return logicalcluster.New(string(c))
 }
 
@@ -58,7 +58,7 @@ func From(obj Object) Cluster {
 // TemporaryCanonicalPath maps a cluster name to the canonical workspace path
 // for that cluster. This is temporary, and it will be replaced by some cached
 // mapping backed by the workspace index, probably of the front-proxy.
-func TemporaryCanonicalPath(c Cluster) logicalcluster.Name {
+func TemporaryCanonicalPath(c Cluster) logicalcluster.Path {
 	path := logicalcluster.New(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(string(c), "-", "§"), "-", ":"), "§", "-"))
 
 	logger := klog.Background()
@@ -70,7 +70,7 @@ func TemporaryCanonicalPath(c Cluster) logicalcluster.Name {
 // TemporaryClusterFrom returns the cluster name for a given workspace path.
 // This is temporary, and it will be replaced by some cached mapping backed
 // by the workspace index, probably of the front-proxy.
-func TemporaryClusterFrom(path logicalcluster.Name) Cluster {
+func TemporaryClusterFrom(path logicalcluster.Path) Cluster {
 	cluster := Cluster(strings.ReplaceAll(strings.ReplaceAll(path.String(), "-", "--"), ":", "-"))
 
 	logger := klog.Background()
