@@ -60,6 +60,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.AcceptablePermissionClaim":                   schema_pkg_apis_apis_v1alpha1_AcceptablePermissionClaim(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.BoundAPIResource":                            schema_pkg_apis_apis_v1alpha1_BoundAPIResource(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.BoundAPIResourceSchema":                      schema_pkg_apis_apis_v1alpha1_BoundAPIResourceSchema(ref),
+		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.ClusterExportReference":                      schema_pkg_apis_apis_v1alpha1_ClusterExportReference(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.ExportReference":                             schema_pkg_apis_apis_v1alpha1_ExportReference(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.GroupResource":                               schema_pkg_apis_apis_v1alpha1_GroupResource(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.Identity":                                    schema_pkg_apis_apis_v1alpha1_Identity(ref),
@@ -68,7 +69,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.PermissionClaim":                             schema_pkg_apis_apis_v1alpha1_PermissionClaim(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.ResourceSelector":                            schema_pkg_apis_apis_v1alpha1_ResourceSelector(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.VirtualWorkspace":                            schema_pkg_apis_apis_v1alpha1_VirtualWorkspace(ref),
-		"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.WorkspaceExportReference":                    schema_pkg_apis_apis_v1alpha1_WorkspaceExportReference(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/scheduling/v1alpha1.AvailableSelectorLabel":                schema_pkg_apis_scheduling_v1alpha1_AvailableSelectorLabel(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/scheduling/v1alpha1.GroupVersionResource":                  schema_pkg_apis_scheduling_v1alpha1_GroupVersionResource(ref),
 		"github.com/kcp-dev/kcp/pkg/apis/scheduling/v1alpha1.Location":                              schema_pkg_apis_scheduling_v1alpha1_Location(ref),
@@ -1901,6 +1901,35 @@ func schema_pkg_apis_apis_v1alpha1_BoundAPIResourceSchema(ref common.ReferenceCa
 	}
 }
 
+func schema_pkg_apis_apis_v1alpha1_ClusterExportReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterExportReference is a reference to an APIExport by cluster and name.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"identifier": {
+						SchemaProps: spec.SchemaProps{
+							Description: "identifier is a logical cluster identifier where the APIExport is defined. If identifier and path are unset, the cluster of the APIBinding is used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"exportName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "exportName is the name of the APIExport that describes the API.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"exportName"},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_apis_v1alpha1_ExportReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -1908,17 +1937,17 @@ func schema_pkg_apis_apis_v1alpha1_ExportReference(ref common.ReferenceCallback)
 				Description: "ExportReference describes a reference to an APIExport. Exactly one of the fields must be set.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"workspace": {
+					"absolute": {
 						SchemaProps: spec.SchemaProps{
-							Description: "workspace is a reference to an APIExport in the same organization. The creator of the APIBinding needs to have access to the APIExport with the verb `bind` in order to bind to it.",
-							Ref:         ref("github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.WorkspaceExportReference"),
+							Description: "cluster is a reference to an APIExport by cluster identifier or path and name. The creator of the APIBinding needs to have access to the APIExport with the verb `bind` in order to bind to it.",
+							Ref:         ref("github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.ClusterExportReference"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.WorkspaceExportReference"},
+			"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.ClusterExportReference"},
 	}
 }
 
@@ -2089,35 +2118,6 @@ func schema_pkg_apis_apis_v1alpha1_VirtualWorkspace(ref common.ReferenceCallback
 					},
 				},
 				Required: []string{"url"},
-			},
-		},
-	}
-}
-
-func schema_pkg_apis_apis_v1alpha1_WorkspaceExportReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "WorkspaceExportReference describes an API and backing implementation that are provided by an actor in the specified Workspace.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"path": {
-						SchemaProps: spec.SchemaProps{
-							Description: "path is an absolute reference to a workspace, e.g. root:org:ws. If it is unset, the path of the APIBinding is used.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"exportName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the APIExport that describes the API.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"exportName"},
 			},
 		},
 	}
@@ -4134,7 +4134,7 @@ func schema_pkg_apis_workload_v1alpha1_SyncTargetSpec(ref common.ReferenceCallba
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.ExportReference"),
+										Ref:     ref("github.com/kcp-dev/kcp/pkg/apis/tenancy/v1alpha1.APIExportReference"),
 									},
 								},
 							},
@@ -4160,7 +4160,7 @@ func schema_pkg_apis_workload_v1alpha1_SyncTargetSpec(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1.ExportReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+			"github.com/kcp-dev/kcp/pkg/apis/tenancy/v1alpha1.APIExportReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
