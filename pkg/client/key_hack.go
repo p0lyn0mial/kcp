@@ -34,5 +34,5 @@ func SplitClusterAwareKey(key string) (logicalcluster.Name, string) {
 	if len(parts) != 2 {
 		panic(fmt.Sprintf("bad key: %v", key))
 	}
-	return logicalcluster.New(parts[0]), parts[1]
+	return logicalcluster.NewName(parts[0]), parts[1]
 }
