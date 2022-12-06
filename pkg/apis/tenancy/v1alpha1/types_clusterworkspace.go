@@ -19,15 +19,16 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/kcp-dev/logicalcluster/v3"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kcp-dev/kcp/pkg/apis/tenancy"
 	conditionsv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/third_party/conditions/apis/conditions/v1alpha1"
 	"github.com/kcp-dev/kcp/pkg/apis/third_party/conditions/util/conditions"
 )
 
 // RootCluster is the root of ClusterWorkspace based logical clusters.
-var RootCluster = logicalcluster.Name("root")
+var RootCluster = logicalcluster.NewName("root")
 
 // ClusterWorkspaceReservedNames defines the set of names that may not be used
 // on user-supplied ClusterWorkspaces.

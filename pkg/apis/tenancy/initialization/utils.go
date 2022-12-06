@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kcp-dev/logicalcluster/v3"
+
 	"k8s.io/apimachinery/pkg/util/validation"
 
 	tenancyv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/tenancy/v1alpha1"
@@ -61,7 +63,7 @@ func EnsureInitializerAbsent(initializer tenancyv1alpha1.WorkspaceInitializer, i
 
 // InitializerForType determines the identifier for the implicit initializer associated with the ClusterWorkspaceType.
 func InitializerForType(cwt *tenancyv1alpha1.ClusterWorkspaceType) tenancyv1alpha1.WorkspaceInitializer {
-	return tenancyv1alpha1.WorkspaceInitializer(logicalcluster.From(cwt).Join(cwt.Name).String())
+	return tenancyv1alpha1.WorkspaceInitializer(logicalcluster.From(cwt).Path().Join(cwt.Name).String())
 }
 
 // InitializerForReference determines the identifier for the implicit initializer associated with the
