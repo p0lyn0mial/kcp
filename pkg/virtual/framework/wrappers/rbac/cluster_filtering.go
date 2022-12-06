@@ -17,6 +17,7 @@ limitations under the License.
 package rbac
 
 import (
+	"fmt"
 	"github.com/kcp-dev/logicalcluster/v3"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -60,8 +61,8 @@ func (i *filteredInterface) Roles() rbacinformers.RoleInformer {
 
 func FilterClusterRoleBindingInformer(clusterName logicalcluster.Path, informer rbacinformers.ClusterRoleBindingInformer) rbacinformers.ClusterRoleBindingInformer {
 	return &filteredClusterRoleBindingInformer{
-		clusterName: clusterName,
-		informer:    informer,
+		cluster:  clusterName,
+		informer: informer,
 	}
 }
 
@@ -69,13 +70,13 @@ var _ rbacinformers.ClusterRoleBindingInformer = (*filteredClusterRoleBindingInf
 var _ rbaclisters.ClusterRoleBindingLister = (*filteredClusterRoleBindingLister)(nil)
 
 type filteredClusterRoleBindingInformer struct {
-	clusterName logicalcluster.Path
-	informer    rbacinformers.ClusterRoleBindingInformer
+	cluster  logicalcluster.Path
+	informer rbacinformers.ClusterRoleBindingInformer
 }
 
 type filteredClusterRoleBindingLister struct {
-	clusterName logicalcluster.Path
-	lister      rbaclisters.ClusterRoleBindingLister
+	cluster logicalcluster.Path
+	lister  rbaclisters.ClusterRoleBindingLister
 }
 
 func (i *filteredClusterRoleBindingInformer) Informer() cache.SharedIndexInformer {
@@ -84,8 +85,8 @@ func (i *filteredClusterRoleBindingInformer) Informer() cache.SharedIndexInforme
 
 func (i *filteredClusterRoleBindingInformer) Lister() rbaclisters.ClusterRoleBindingLister {
 	return &filteredClusterRoleBindingLister{
-		clusterName: i.clusterName,
-		lister:      i.informer.Lister(),
+		cluster: i.cluster,
+		lister:  i.informer.Lister(),
 	}
 }
 
@@ -95,7 +96,7 @@ func (l *filteredClusterRoleBindingLister) List(selector labels.Selector) (ret [
 		return nil, err
 	}
 	for _, item := range items {
-		if logicalcluster.From(item) == l.clusterName {
+		if logicalcluster.From(item).Path() == l.cluster {
 			ret = append(ret, item)
 		}
 	}
@@ -104,15 +105,19 @@ func (l *filteredClusterRoleBindingLister) List(selector labels.Selector) (ret [
 
 func (l *filteredClusterRoleBindingLister) Get(name string) (*rbacv1.ClusterRoleBinding, error) {
 	if clusterName, _ := client.SplitClusterAwareKey(name); clusterName.Empty() {
-		name = client.ToClusterAwareKey(l.clusterName, name)
+		clusterName, ok := l.cluster.Name()
+		if !ok {
+			return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", l.cluster.String())
+		}
+		name = client.ToClusterAwareKey(clusterName, name)
 	}
 	return l.lister.Get(name)
 }
 
 func FilterClusterRoleInformer(clusterName logicalcluster.Path, informer rbacinformers.ClusterRoleInformer) rbacinformers.ClusterRoleInformer {
 	return &filteredClusterRoleInformer{
-		clusterName: clusterName,
-		informer:    informer,
+		cluster:  clusterName,
+		informer: informer,
 	}
 }
 
@@ -120,13 +125,13 @@ var _ rbacinformers.ClusterRoleInformer = (*filteredClusterRoleInformer)(nil)
 var _ rbaclisters.ClusterRoleLister = (*filteredClusterRoleLister)(nil)
 
 type filteredClusterRoleInformer struct {
-	clusterName logicalcluster.Path
-	informer    rbacinformers.ClusterRoleInformer
+	cluster  logicalcluster.Path
+	informer rbacinformers.ClusterRoleInformer
 }
 
 type filteredClusterRoleLister struct {
-	clusterName logicalcluster.Path
-	lister      rbaclisters.ClusterRoleLister
+	cluster logicalcluster.Path
+	lister  rbaclisters.ClusterRoleLister
 }
 
 func (i *filteredClusterRoleInformer) Informer() cache.SharedIndexInformer {
@@ -135,8 +140,8 @@ func (i *filteredClusterRoleInformer) Informer() cache.SharedIndexInformer {
 
 func (i *filteredClusterRoleInformer) Lister() rbaclisters.ClusterRoleLister {
 	return &filteredClusterRoleLister{
-		clusterName: i.clusterName,
-		lister:      i.informer.Lister(),
+		cluster: i.cluster,
+		lister:  i.informer.Lister(),
 	}
 }
 
@@ -146,7 +151,7 @@ func (l *filteredClusterRoleLister) List(selector labels.Selector) (ret []*rbacv
 		return nil, err
 	}
 	for _, item := range items {
-		if logicalcluster.From(item) == l.clusterName {
+		if logicalcluster.From(item).Path() == l.cluster {
 			ret = append(ret, item)
 		}
 	}
@@ -155,15 +160,19 @@ func (l *filteredClusterRoleLister) List(selector labels.Selector) (ret []*rbacv
 
 func (l *filteredClusterRoleLister) Get(name string) (*rbacv1.ClusterRole, error) {
 	if clusterName, _ := client.SplitClusterAwareKey(name); clusterName.Empty() {
-		name = client.ToClusterAwareKey(l.clusterName, name)
+		clusterName, ok := l.cluster.Name()
+		if !ok {
+			return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", l.cluster.String())
+		}
+		name = client.ToClusterAwareKey(clusterName, name)
 	}
 	return l.lister.Get(name)
 }
 
 func FilterRoleBindingInformer(clusterName logicalcluster.Path, informer rbacinformers.RoleBindingInformer) rbacinformers.RoleBindingInformer {
 	return &filteredRoleBindingInformer{
-		clusterName: clusterName,
-		informer:    informer,
+		cluster:  clusterName,
+		informer: informer,
 	}
 }
 
@@ -172,18 +181,18 @@ var _ rbaclisters.RoleBindingLister = (*filteredRoleBindingLister)(nil)
 var _ rbaclisters.RoleBindingNamespaceLister = (*filteredRoleBindingNamespaceLister)(nil)
 
 type filteredRoleBindingInformer struct {
-	clusterName logicalcluster.Path
-	informer    rbacinformers.RoleBindingInformer
+	cluster  logicalcluster.Path
+	informer rbacinformers.RoleBindingInformer
 }
 
 type filteredRoleBindingLister struct {
-	clusterName logicalcluster.Path
-	lister      rbaclisters.RoleBindingLister
+	cluster logicalcluster.Path
+	lister  rbaclisters.RoleBindingLister
 }
 
 type filteredRoleBindingNamespaceLister struct {
-	clusterName logicalcluster.Path
-	lister      rbaclisters.RoleBindingNamespaceLister
+	cluster logicalcluster.Path
+	lister  rbaclisters.RoleBindingNamespaceLister
 }
 
 func (i *filteredRoleBindingInformer) Informer() cache.SharedIndexInformer {
@@ -192,8 +201,8 @@ func (i *filteredRoleBindingInformer) Informer() cache.SharedIndexInformer {
 
 func (i *filteredRoleBindingInformer) Lister() rbaclisters.RoleBindingLister {
 	return &filteredRoleBindingLister{
-		clusterName: i.clusterName,
-		lister:      i.informer.Lister(),
+		cluster: i.cluster,
+		lister:  i.informer.Lister(),
 	}
 }
 
@@ -203,7 +212,7 @@ func (l *filteredRoleBindingLister) List(selector labels.Selector) (ret []*rbacv
 		return nil, err
 	}
 	for _, item := range items {
-		if logicalcluster.From(item) == l.clusterName {
+		if logicalcluster.From(item).Path() == l.cluster {
 			ret = append(ret, item)
 		}
 	}
@@ -212,8 +221,8 @@ func (l *filteredRoleBindingLister) List(selector labels.Selector) (ret []*rbacv
 
 func (l *filteredRoleBindingLister) RoleBindings(namespace string) rbaclisters.RoleBindingNamespaceLister {
 	return &filteredRoleBindingNamespaceLister{
-		clusterName: l.clusterName,
-		lister:      l.lister.RoleBindings(namespace),
+		cluster: l.cluster,
+		lister:  l.lister.RoleBindings(namespace),
 	}
 }
 
@@ -223,7 +232,7 @@ func (l *filteredRoleBindingNamespaceLister) List(selector labels.Selector) (ret
 		return nil, err
 	}
 	for _, item := range items {
-		if logicalcluster.From(item) == l.clusterName {
+		if logicalcluster.From(item).Path() == l.cluster {
 			ret = append(ret, item)
 		}
 	}
@@ -232,7 +241,11 @@ func (l *filteredRoleBindingNamespaceLister) List(selector labels.Selector) (ret
 
 func (l *filteredRoleBindingNamespaceLister) Get(name string) (*rbacv1.RoleBinding, error) {
 	if clusterName, _ := client.SplitClusterAwareKey(name); clusterName.Empty() {
-		name = client.ToClusterAwareKey(l.clusterName, name)
+		clusterName, ok := l.cluster.Name()
+		if !ok {
+			return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", l.cluster.String())
+		}
+		name = client.ToClusterAwareKey(clusterName, name)
 	}
 	return l.lister.Get(name)
 }
@@ -259,8 +272,8 @@ type filteredRoleLister struct {
 }
 
 type filteredRoleNamespaceLister struct {
-	clusterName logicalcluster.Path
-	lister      rbaclisters.RoleNamespaceLister
+	cluster logicalcluster.Path
+	lister  rbaclisters.RoleNamespaceLister
 }
 
 func (i *filteredRoleInformer) Informer() cache.SharedIndexInformer {
@@ -280,7 +293,7 @@ func (l *filteredRoleLister) List(selector labels.Selector) (ret []*rbacv1.Role,
 		return nil, err
 	}
 	for _, item := range items {
-		if logicalcluster.From(item) == l.clusterName {
+		if logicalcluster.From(item).Path() == l.clusterName {
 			ret = append(ret, item)
 		}
 	}
@@ -289,8 +302,8 @@ func (l *filteredRoleLister) List(selector labels.Selector) (ret []*rbacv1.Role,
 
 func (l *filteredRoleLister) Roles(namespace string) rbaclisters.RoleNamespaceLister {
 	return &filteredRoleNamespaceLister{
-		clusterName: l.clusterName,
-		lister:      l.lister.Roles(namespace),
+		cluster: l.clusterName,
+		lister:  l.lister.Roles(namespace),
 	}
 }
 
@@ -300,7 +313,7 @@ func (l *filteredRoleNamespaceLister) List(selector labels.Selector) (ret []*rba
 		return nil, err
 	}
 	for _, item := range items {
-		if logicalcluster.From(item) == l.clusterName {
+		if logicalcluster.From(item).Path() == l.cluster {
 			ret = append(ret, item)
 		}
 	}
@@ -309,7 +322,11 @@ func (l *filteredRoleNamespaceLister) List(selector labels.Selector) (ret []*rba
 
 func (l *filteredRoleNamespaceLister) Get(name string) (*rbacv1.Role, error) {
 	if clusterName, _ := client.SplitClusterAwareKey(name); clusterName.Empty() {
-		name = client.ToClusterAwareKey(l.clusterName, name)
+		clusterName, ok := l.cluster.Name()
+		if !ok {
+			return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", l.cluster.String())
+		}
+		name = client.ToClusterAwareKey(clusterName, name)
 	}
 	return l.lister.Get(name)
 }
