@@ -81,7 +81,7 @@ func IndexAPIBindingByBoundResources(obj interface{}) ([]string, error) {
 
 	var ret []string
 	for _, r := range apiBinding.Status.BoundResources {
-		ret = append(ret, APIBindingBoundResourceValue(clusterName, r.Group, r.Resource))
+		ret = append(ret, APIBindingBoundResourceValue(clusterName.Path(), r.Group, r.Resource))
 	}
 
 	return ret, nil
