@@ -18,6 +18,7 @@ package placement
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kcp-dev/logicalcluster/v3"
 
@@ -68,11 +69,19 @@ func (c *controller) reconcile(ctx context.Context, placement *schedulingv1alpha
 	return utilserrors.NewAggregate(errs)
 }
 
-func (c *controller) listSyncTarget(clusterName logicalcluster.Path) ([]*workloadv1alpha1.SyncTarget, error) {
+func (c *controller) listSyncTarget(cluster logicalcluster.Path) ([]*workloadv1alpha1.SyncTarget, error) {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	return c.syncTargetLister.Cluster(clusterName).List(labels.Everything())
 }
 
-func (c *controller) getLocation(clusterName logicalcluster.Path, name string) (*schedulingv1alpha1.Location, error) {
+func (c *controller) getLocation(cluster logicalcluster.Path, name string) (*schedulingv1alpha1.Location, error) {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	return c.locationLister.Cluster(clusterName).Get(name)
 }
 

@@ -46,14 +46,14 @@ type reconciler interface {
 
 // statusReconciler reconciles Location objects' status.
 type statusReconciler struct {
-	listSyncTargets func(clusterName logicalcluster.Name) ([]*workloadv1alpha1.SyncTarget, error)
+	listSyncTargets func(cluster logicalcluster.Path) ([]*workloadv1alpha1.SyncTarget, error)
 	updateLocation  func(ctx context.Context, clusterName logicalcluster.Path, location *schedulingv1alpha1.Location) (*schedulingv1alpha1.Location, error)
 	enqueueAfter    func(*schedulingv1alpha1.Location, time.Duration)
 }
 
 func (r *statusReconciler) reconcile(ctx context.Context, location *schedulingv1alpha1.Location) (reconcileStatus, error) {
 	clusterName := tenancy.From(location)
-	syncTargets, err := r.listSyncTargets(clusterName)
+	syncTargets, err := r.listSyncTargets(clusterName.Path())
 	if err != nil {
 		return reconcileStatusStop, err
 	}
@@ -123,10 +123,14 @@ func (c *controller) reconcile(ctx context.Context, location *schedulingv1alpha1
 	return utilserrors.NewAggregate(errs)
 }
 
-func (c *controller) listSyncTarget(clusterName logicalcluster.Name) ([]*workloadv1alpha1.SyncTarget, error) {
-	return c.syncTargetLister.Cluster(clusterName.Path()).List(labels.Everything())
+func (c *controller) listSyncTarget(cluster logicalcluster.Path) ([]*workloadv1alpha1.SyncTarget, error) {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
+	return c.syncTargetLister.Cluster(clusterName).List(labels.Everything())
 }
 
-func (c *controller) updateLocation(ctx context.Context, clusterName logicalcluster.Path, location *schedulingv1alpha1.Location) (*schedulingv1alpha1.Location, error) {
-	return c.kcpClusterClient.Cluster(clusterName).SchedulingV1alpha1().Locations().Update(ctx, location, metav1.UpdateOptions{})
+func (c *controller) updateLocation(ctx context.Context, cluster logicalcluster.Path, location *schedulingv1alpha1.Location) (*schedulingv1alpha1.Location, error) {
+	return c.kcpClusterClient.Cluster(cluster).SchedulingV1alpha1().Locations().Update(ctx, location, metav1.UpdateOptions{})
 }

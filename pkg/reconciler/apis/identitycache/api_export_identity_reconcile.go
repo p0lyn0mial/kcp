@@ -47,7 +47,7 @@ func (c *controller) reconcile(ctx context.Context) error {
 		requiredApiExportIdentitiesConfigMap.Data[apiExport.Name] = apiExport.Status.IdentityHash
 	}
 
-	apiExportIdentitiesConfigMap, err := c.getConfigMap(configshard.SystemShardCluster, "default", ConfigMapName)
+	apiExportIdentitiesConfigMap, err := c.getConfigMap(configshard.SystemShardCluster.Path(), "default", ConfigMapName)
 	if apierrors.IsNotFound(err) {
 		_, err := c.createConfigMap(ctx, configshard.SystemShardCluster.Path(), "default", requiredApiExportIdentitiesConfigMap)
 		return err

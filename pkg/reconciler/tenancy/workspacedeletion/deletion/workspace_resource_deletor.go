@@ -344,7 +344,7 @@ func (d *workspacedResourcesDeleter) deleteAllContent(ctx context.Context, ws *t
 
 	// disocer resources at first
 	var deletionContentSuccessReason string
-	resources, err := d.discoverResourcesFn(logicalcluster.From(ws))
+	resources, err := d.discoverResourcesFn(logicalcluster.From(ws).Path())
 	if err != nil {
 		// discovery errors are not fatal.  We often have some set of resources we can operate against even if we don't have a complete list
 		errs = append(errs, err)
@@ -382,7 +382,7 @@ func (d *workspacedResourcesDeleter) deleteAllContent(ctx context.Context, ws *t
 	}
 	deleteContentErrs := []error{}
 	for gvr, verbs := range groupVersionResources {
-		gvrDeletionMetadata, err := d.deleteAllContentForGroupVersionResource(ctx, logicalcluster.From(ws), gvr, verbs, workspaceDeletedAt)
+		gvrDeletionMetadata, err := d.deleteAllContentForGroupVersionResource(ctx, logicalcluster.From(ws).Path(), gvr, verbs, workspaceDeletedAt)
 		if err != nil {
 			// If there is an error, hold on to it but proceed with all the remaining
 			// groupVersionResources.

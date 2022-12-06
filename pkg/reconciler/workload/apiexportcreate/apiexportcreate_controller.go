@@ -38,7 +38,6 @@ import (
 
 	apisv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1"
 	schedulingv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/scheduling/v1alpha1"
-	"github.com/kcp-dev/kcp/pkg/apis/tenancy"
 	workloadv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/workload/v1alpha1"
 	"github.com/kcp-dev/kcp/pkg/client"
 	kcpclientset "github.com/kcp-dev/kcp/pkg/client/clientset/versioned/cluster"
@@ -214,9 +213,9 @@ func (c *controller) processNextWorkItem(ctx context.Context) bool {
 
 func (c *controller) process(ctx context.Context, key string) error {
 	logger := klog.FromContext(ctx)
-	clusterName := logicalcluster.Name(key)
+	clusterName := logicalcluster.NewName(key)
 
-	syncTargets, err := c.syncTargetLister.Cluster(clusterName.Path()).List(labels.Everything())
+	syncTargets, err := c.syncTargetLister.Cluster(clusterName).List(labels.Everything())
 	if err != nil {
 		logger.Error(err, "failed to list clusters for workspace")
 		return err
@@ -227,7 +226,7 @@ func (c *controller) process(ctx context.Context, key string) error {
 	}
 
 	// check that export exists, and create it if not
-	export, err := c.apiExportsLister.Cluster(clusterName.Path()).Get(reconcilerapiexport.TemporaryComputeServiceExportName)
+	export, err := c.apiExportsLister.Cluster(clusterName).Get(reconcilerapiexport.TemporaryComputeServiceExportName)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	} else if apierrors.IsNotFound(err) {
@@ -252,7 +251,7 @@ func (c *controller) process(ctx context.Context, key string) error {
 	}
 
 	// check that location exists, and create it if not
-	_, err = c.locationLister.Cluster(clusterName.Path()).Get(DefaultLocationName)
+	_, err = c.locationLister.Cluster(clusterName).Get(DefaultLocationName)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	} else if apierrors.IsNotFound(err) {
@@ -280,7 +279,7 @@ func (c *controller) process(ctx context.Context, key string) error {
 	}
 
 	// check that binding exists, and create it if not
-	bindings, err := c.apiBindingLister.Cluster(clusterName.Path()).List(labels.Everything())
+	bindings, err := c.apiBindingLister.Cluster(clusterName).List(labels.Everything())
 	if err != nil {
 		logger.Error(err, "failed to list APIBindings")
 		return err

@@ -81,7 +81,7 @@ func NewController(
 	if err := c.negotiatedApiResourceIndexer.AddIndexers(map[string]cache.IndexFunc{
 		clusterNameAndGVRIndexName: func(obj interface{}) ([]string, error) {
 			if negotiatedApiResource, ok := obj.(*apiresourcev1alpha1.NegotiatedAPIResource); ok {
-				return []string{GetClusterNameAndGVRIndexKey(logicalcluster.From(negotiatedApiResource), negotiatedApiResource.GVR())}, nil
+				return []string{GetClusterNameAndGVRIndexKey(logicalcluster.From(negotiatedApiResource).Path(), negotiatedApiResource.GVR())}, nil
 			}
 			return []string{}, nil
 		},
@@ -97,7 +97,7 @@ func NewController(
 	if err := c.apiResourceImportIndexer.AddIndexers(map[string]cache.IndexFunc{
 		clusterNameAndGVRIndexName: func(obj interface{}) ([]string, error) {
 			if apiResourceImport, ok := obj.(*apiresourcev1alpha1.APIResourceImport); ok {
-				return []string{GetClusterNameAndGVRIndexKey(logicalcluster.From(apiResourceImport), apiResourceImport.GVR())}, nil
+				return []string{GetClusterNameAndGVRIndexKey(logicalcluster.From(apiResourceImport).Path(), apiResourceImport.GVR())}, nil
 			}
 			return []string{}, nil
 		},
@@ -113,7 +113,7 @@ func NewController(
 	if err := c.crdIndexer.AddIndexers(map[string]cache.IndexFunc{
 		clusterNameAndGVRIndexName: func(obj interface{}) ([]string, error) {
 			if crd, ok := obj.(*apiextensionsv1.CustomResourceDefinition); ok {
-				return []string{GetClusterNameAndGVRIndexKey(logicalcluster.From(crd), metav1.GroupVersionResource{
+				return []string{GetClusterNameAndGVRIndexKey(logicalcluster.From(crd).Path(), metav1.GroupVersionResource{
 					Group:    crd.Spec.Group,
 					Resource: crd.Spec.Names.Plural,
 				})}, nil
@@ -175,7 +175,7 @@ type queueElement struct {
 	theType       queueElementType
 	theKey        string
 	gvr           metav1.GroupVersionResource
-	clusterName   logicalcluster.Path
+	cluster       logicalcluster.Path
 	deletedObject interface{}
 }
 
@@ -286,7 +286,7 @@ func (c *Controller) enqueue(action resourceHandlerAction, oldObj, obj interface
 		theType:       theType,
 		theKey:        key,
 		gvr:           gvr,
-		clusterName:   logicalcluster.From(newMeta),
+		cluster:       logicalcluster.From(newMeta).Path(),
 		deletedObject: deletedObject,
 	})
 }
@@ -324,7 +324,7 @@ func (c *Controller) processNextWorkItem(ctx context.Context) bool {
 		"action", key.theAction,
 		"type", key.theType,
 		"gvr", key.gvr,
-		"clusterName", key.clusterName,
+		"cluster", key.cluster,
 	)
 	ctx = klog.NewContext(ctx, logger)
 	logger.V(1).Info("processing key")

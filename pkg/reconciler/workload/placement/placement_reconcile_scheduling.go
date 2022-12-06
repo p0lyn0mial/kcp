@@ -51,7 +51,7 @@ func (r *placementSchedulingReconciler) reconcile(ctx context.Context, placement
 	currentScheduled, foundScheduled := placement.Annotations[workloadv1alpha1.InternalSyncTargetPlacementAnnotationKey]
 
 	// 2. pick all valid synctargets in this placements
-	syncTargetClusterName, syncTargets, err := r.getAllValidSyncTargetsForPlacement(clusterName, placement)
+	syncTargetClusterName, syncTargets, err := r.getAllValidSyncTargetsForPlacement(clusterName.Path(), placement)
 	if err != nil {
 		return reconcileStatusStop, placement, err
 	}
@@ -59,14 +59,14 @@ func (r *placementSchedulingReconciler) reconcile(ctx context.Context, placement
 	// no valid synctarget, clean the annotation.
 	if foundScheduled && len(syncTargets) == 0 {
 		expectedAnnotations[workloadv1alpha1.InternalSyncTargetPlacementAnnotationKey] = nil
-		updated, err := r.patchPlacementAnnotation(ctx, clusterName, placement, expectedAnnotations)
+		updated, err := r.patchPlacementAnnotation(ctx, clusterName.Path(), placement, expectedAnnotations)
 		return reconcileStatusContinue, updated, err
 	}
 
 	// 2. do nothing if scheduled cluster is in the valid clusters
 	if foundScheduled && len(syncTargets) > 0 {
 		for _, syncTarget := range syncTargets {
-			syncTargetKey := workloadv1alpha1.ToSyncTargetKey(logicalcluster.From(syncTarget), syncTarget.Name)
+			syncTargetKey := workloadv1alpha1.ToSyncTargetKey(logicalcluster.From(syncTarget).Path(), syncTarget.Name)
 			if syncTargetKey != currentScheduled {
 				continue
 			}
@@ -81,14 +81,14 @@ func (r *placementSchedulingReconciler) reconcile(ctx context.Context, placement
 	if len(syncTargets) > 0 {
 		scheduledSyncTarget := syncTargets[rand.Intn(len(syncTargets))]
 		expectedAnnotations[workloadv1alpha1.InternalSyncTargetPlacementAnnotationKey] = workloadv1alpha1.ToSyncTargetKey(syncTargetClusterName, scheduledSyncTarget.Name)
-		updated, err := r.patchPlacementAnnotation(ctx, clusterName, placement, expectedAnnotations)
+		updated, err := r.patchPlacementAnnotation(ctx, clusterName.Path(), placement, expectedAnnotations)
 		return reconcileStatusContinue, updated, err
 	}
 
 	return reconcileStatusContinue, placement, nil
 }
 
-func (r *placementSchedulingReconciler) getAllValidSyncTargetsForPlacement(clusterName logicalcluster.Path, placement *schedulingv1alpha1.Placement) (logicalcluster.Path, []*workloadv1alpha1.SyncTarget, error) {
+func (r *placementSchedulingReconciler) getAllValidSyncTargetsForPlacement(cluster logicalcluster.Path, placement *schedulingv1alpha1.Placement) (logicalcluster.Path, []*workloadv1alpha1.SyncTarget, error) {
 	if placement.Status.Phase == schedulingv1alpha1.PlacementPending || placement.Status.SelectedLocation == nil {
 		return logicalcluster.Path{}, nil, nil
 	}

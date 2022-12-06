@@ -79,7 +79,7 @@ func (r *schemaReconciler) reconcile(ctx context.Context, export *apisv1alpha1.A
 		return reconcileStatusStop, nil
 	}
 
-	resources, err := r.listNegotiatedAPIResources(clusterName)
+	resources, err := r.listNegotiatedAPIResources(clusterName.Path())
 	if err != nil {
 		return reconcileStatusStop, err
 	}
@@ -88,7 +88,7 @@ func (r *schemaReconciler) reconcile(ctx context.Context, export *apisv1alpha1.A
 		return reconcileStatusStop, nil
 	}
 
-	shouldSkip, err := r.shouldSkipComputeAPIs(clusterName)
+	shouldSkip, err := r.shouldSkipComputeAPIs(clusterName.Path())
 	if err != nil {
 		return reconcileStatusStop, err
 	}
@@ -123,7 +123,7 @@ func (r *schemaReconciler) reconcile(ctx context.Context, export *apisv1alpha1.A
 		}
 		resourceGroup := fmt.Sprintf("%s.%s", resource, group)
 
-		existingSchema, err := r.getAPIResourceSchema(ctx, clusterName, schemaName)
+		existingSchema, err := r.getAPIResourceSchema(ctx, clusterName.Path(), schemaName)
 		if apierrors.IsNotFound(err) {
 			// not found, will be recreated
 			continue
@@ -162,9 +162,9 @@ func (r *schemaReconciler) reconcile(ctx context.Context, export *apisv1alpha1.A
 		schema.OwnerReferences = []metav1.OwnerReference{
 			*metav1.NewControllerRef(export, apisv1alpha1.SchemeGroupVersion.WithKind("APIExport")),
 		}
-		schema, err = r.createAPIResourceSchema(ctx, clusterName, schema)
+		schema, err = r.createAPIResourceSchema(ctx, clusterName.Path(), schema)
 		if apierrors.IsAlreadyExists(err) {
-			schema, err = r.getAPIResourceSchema(ctx, clusterName, schemaName)
+			schema, err = r.getAPIResourceSchema(ctx, clusterName.Path(), schemaName)
 		}
 		if err != nil {
 			return reconcileStatusStop, err
@@ -189,20 +189,20 @@ func (r *schemaReconciler) reconcile(ctx context.Context, export *apisv1alpha1.A
 		referencedSchemaNames[schema.Name] = true
 	}
 	if !reflect.DeepEqual(old.Spec.LatestResourceSchemas, export.Spec.LatestResourceSchemas) {
-		if _, err := r.updateAPIExport(ctx, clusterName, export); err != nil {
+		if _, err := r.updateAPIExport(ctx, clusterName.Path(), export); err != nil {
 			return reconcileStatusStop, err
 		}
 	}
 
 	// delete schemas that are no longer needed
-	allSchemas, err := r.listAPIResourceSchemas(clusterName)
+	allSchemas, err := r.listAPIResourceSchemas(clusterName.Path())
 	if err != nil {
 		return reconcileStatusStop, err
 	}
 	for _, schema := range allSchemas {
 		if !referencedSchemaNames[schema.Name] && metav1.IsControlledBy(schema, export) {
 			logging.WithObject(logger, schema).V(2).Info("deleting schema of APIExport")
-			if err := r.deleteAPIResourceSchema(ctx, clusterName, schema.Name); err != nil && !apierrors.IsNotFound(err) {
+			if err := r.deleteAPIResourceSchema(ctx, clusterName.Path(), schema.Name); err != nil && !apierrors.IsNotFound(err) {
 				return reconcileStatusStop, err
 			}
 		}
@@ -266,22 +266,38 @@ func (c *controller) reconcile(ctx context.Context, export *apisv1alpha1.APIExpo
 	return errors.NewAggregate(errs)
 }
 
-func (c *controller) listNegotiatedAPIResources(clusterName logicalcluster.Path) ([]*apiresourcev1alpha1.NegotiatedAPIResource, error) {
+func (c *controller) listNegotiatedAPIResources(cluster logicalcluster.Path) ([]*apiresourcev1alpha1.NegotiatedAPIResource, error) {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	return c.negotiatedAPIResourceLister.Cluster(clusterName).List(labels.Everything())
 }
 
-func (c *controller) listAPIResourceSchemas(clusterName logicalcluster.Path) ([]*apisv1alpha1.APIResourceSchema, error) {
+func (c *controller) listAPIResourceSchemas(cluster logicalcluster.Path) ([]*apisv1alpha1.APIResourceSchema, error) {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	return c.apiResourceSchemaLister.Cluster(clusterName).List(labels.Everything())
 }
 
-func (c *controller) listSyncTarget(clusterName logicalcluster.Path) ([]*workloadv1alpha1.SyncTarget, error) {
+func (c *controller) listSyncTarget(cluster logicalcluster.Path) ([]*workloadv1alpha1.SyncTarget, error) {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	return c.syncTargetClusterLister.Cluster(clusterName).List(labels.Everything())
 }
 
-func (c *controller) getAPIResourceSchema(ctx context.Context, clusterName logicalcluster.Path, name string) (*apisv1alpha1.APIResourceSchema, error) {
+func (c *controller) getAPIResourceSchema(ctx context.Context, cluster logicalcluster.Path, name string) (*apisv1alpha1.APIResourceSchema, error) {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	schema, err := c.apiResourceSchemaLister.Cluster(clusterName).Get(name)
 	if apierrors.IsNotFound(err) {
-		return c.kcpClusterClient.Cluster(clusterName).ApisV1alpha1().APIResourceSchemas().Get(ctx, name, metav1.GetOptions{})
+		return c.kcpClusterClient.Cluster(cluster).ApisV1alpha1().APIResourceSchemas().Get(ctx, name, metav1.GetOptions{})
 	}
 	return schema, err
 }

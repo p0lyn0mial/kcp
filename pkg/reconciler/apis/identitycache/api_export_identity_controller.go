@@ -37,7 +37,6 @@ import (
 
 	configshard "github.com/kcp-dev/kcp/config/shard"
 	apisv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/apis/v1alpha1"
-	"github.com/kcp-dev/kcp/pkg/apis/tenancy"
 	tenancyv1alpha1 "github.com/kcp-dev/kcp/pkg/apis/tenancy/v1alpha1"
 	apisv1alpha1informers "github.com/kcp-dev/kcp/pkg/client/informers/externalversions/apis/v1alpha1"
 	"github.com/kcp-dev/kcp/pkg/logging"
@@ -69,14 +68,22 @@ func NewApiExportIdentityProviderController(
 		createConfigMap: func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			return kubeClusterClient.Cluster(cluster).CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
 		},
-		getConfigMap: func(clusterName logicalcluster.Name, namespace, name string) (*corev1.ConfigMap, error) {
-			return configMapInformer.Lister().Cluster(clusterName.Path()).ConfigMaps(namespace).Get(name)
+		getConfigMap: func(cluster logicalcluster.Path, namespace, name string) (*corev1.ConfigMap, error) {
+			clusterName, ok := cluster.Name()
+			if !ok {
+				return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+			}
+			return configMapInformer.Lister().Cluster(clusterName).ConfigMaps(namespace).Get(name)
 		},
 		updateConfigMap: func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			return kubeClusterClient.Cluster(cluster).CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
 		},
-		listAPIExportsFromRemoteShard: func(clusterName logicalcluster.Name) ([]*apisv1alpha1.APIExport, error) {
-			return remoteShardApiExportInformer.Lister().Cluster(clusterName.Path()).List(labels.Everything())
+		listAPIExportsFromRemoteShard: func(cluster logicalcluster.Path) ([]*apisv1alpha1.APIExport, error) {
+			clusterName, ok := cluster.Name()
+			if !ok {
+				return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+			}
+			return remoteShardApiExportInformer.Lister().Cluster(clusterName).List(labels.Everything())
 		},
 	}
 
@@ -92,7 +99,7 @@ func NewApiExportIdentityProviderController(
 				runtime.HandleError(err)
 				return false
 			}
-			clusterName := logicalcluster.Name(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns logicalcluster.Name
+			clusterName := logicalcluster.NewName(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns logicalcluster.Name
 			return clusterName == tenancyv1alpha1.RootCluster
 		},
 		Handler: cache.ResourceEventHandlerFuncs{
@@ -114,7 +121,7 @@ func NewApiExportIdentityProviderController(
 				runtime.HandleError(err)
 				return false
 			}
-			clusterName := logicalcluster.Name(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns logicalcluster.Name
+			clusterName := logicalcluster.NewName(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns logicalcluster.Name
 			if clusterName != configshard.SystemShardCluster {
 				return false
 			}
@@ -175,7 +182,7 @@ func (c *controller) processNextWorkItem(ctx context.Context) bool {
 type controller struct {
 	queue                         workqueue.RateLimitingInterface
 	createConfigMap               func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
-	getConfigMap                  func(clusterName logicalcluster.Name, namespace, name string) (*corev1.ConfigMap, error)
+	getConfigMap                  func(cluster logicalcluster.Path, namespace, name string) (*corev1.ConfigMap, error)
 	updateConfigMap               func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
-	listAPIExportsFromRemoteShard func(clusterName logicalcluster.Name) ([]*apisv1alpha1.APIExport, error)
+	listAPIExportsFromRemoteShard func(cluster logicalcluster.Path) ([]*apisv1alpha1.APIExport, error)
 }
