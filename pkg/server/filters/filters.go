@@ -95,7 +95,7 @@ func WithClusterScope(apiHandler http.Handler) http.HandlerFunc {
 					w, req)
 				return
 			}
-			clusterName, path = logicalcluster.New(path[:i]), path[i:]
+			clusterName, path = logicalcluster.NewName(path[:i]), path[i:]
 			req.URL.Path = path
 			newURL, err := url.Parse(req.URL.String())
 			if err != nil {
@@ -107,7 +107,7 @@ func WithClusterScope(apiHandler http.Handler) http.HandlerFunc {
 			}
 			req.URL = newURL
 		} else {
-			clusterName = logicalcluster.New(req.Header.Get(logicalcluster.ClusterHeader))
+			clusterName = logicalcluster.NewName(req.Header.Get(logicalcluster.ClusterHeader))
 		}
 
 		var cluster request.Cluster
