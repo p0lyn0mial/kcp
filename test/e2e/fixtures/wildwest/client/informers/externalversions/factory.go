@@ -178,7 +178,7 @@ type ScopedDynamicSharedInformerFactory interface {
 // API group versions.
 type SharedInformerFactory interface {
 	internalinterfaces.SharedInformerFactory
-	Cluster(logicalcluster.Name) ScopedDynamicSharedInformerFactory
+	Cluster(logicalcluster.Path) ScopedDynamicSharedInformerFactory
 	ForResource(resource schema.GroupVersionResource) (GenericClusterInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
@@ -189,7 +189,7 @@ func (f *sharedInformerFactory) Wildwest() wildwestinformers.ClusterInterface {
 	return wildwestinformers.New(f, f.tweakListOptions)
 }
 
-func (f *sharedInformerFactory) Cluster(cluster logicalcluster.Name) ScopedDynamicSharedInformerFactory {
+func (f *sharedInformerFactory) Cluster(cluster logicalcluster.Path) ScopedDynamicSharedInformerFactory {
 	return &scopedDynamicSharedInformerFactory{
 		sharedInformerFactory: f,
 		cluster:               cluster,
@@ -198,7 +198,7 @@ func (f *sharedInformerFactory) Cluster(cluster logicalcluster.Name) ScopedDynam
 
 type scopedDynamicSharedInformerFactory struct {
 	*sharedInformerFactory
-	cluster logicalcluster.Name
+	cluster logicalcluster.Path
 }
 
 func (f *scopedDynamicSharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {

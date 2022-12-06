@@ -634,7 +634,7 @@ func pluralize(name string) string {
 
 func bootstrapCRD(
 	t *testing.T,
-	clusterName logicalcluster.Name,
+	clusterName logicalcluster.Path,
 	client kcpapiextensionsv1client.CustomResourceDefinitionClusterInterface,
 	crd *apiextensionsv1.CustomResourceDefinition,
 ) {

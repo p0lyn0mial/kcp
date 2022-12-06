@@ -37,7 +37,7 @@ import (
 // apiCompatibleReconciler sets state for each synced resource based on resource schema and apiimports.
 // TODO(qiujian06) this should be done in syncer when resource schema(or crd) is exposed by syncer virtual workspace.
 type apiCompatibleReconciler struct {
-	getAPIExport           func(path logicalcluster.Name, name string) (*apisv1alpha1.APIExport, error)
+	getAPIExport           func(path logicalcluster.Path, name string) (*apisv1alpha1.APIExport, error)
 	getResourceSchema      func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error)
 	listAPIResourceImports func(clusterName tenancy.Cluster) ([]*apiresourcev1alpha1.APIResourceImport, error)
 }

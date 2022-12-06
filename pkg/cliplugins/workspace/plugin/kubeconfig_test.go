@@ -274,10 +274,10 @@ func TestUse(t *testing.T) {
 		config clientcmdapi.Config
 
 		existingObjects    map[tenancy.Cluster][]string
-		getWorkspaceErrors map[logicalcluster.Name]error
-		discovery          map[logicalcluster.Name][]*metav1.APIResourceList
-		discoveryErrors    map[logicalcluster.Name]error
-		unready            map[logicalcluster.Name]map[string]bool // unready workspaces
+		getWorkspaceErrors map[logicalcluster.Path]error
+		discovery          map[logicalcluster.Path][]*metav1.APIResourceList
+		discoveryErrors    map[logicalcluster.Path]error
+		unready            map[logicalcluster.Path]map[string]bool // unready workspaces
 		apiBindings        []apisv1alpha1.APIBinding               // APIBindings that exist in the destination workspace, if any
 		destination        string                                  // workspace set to 'current' at the end of execution
 		short              bool
@@ -385,7 +385,7 @@ func TestUse(t *testing.T) {
 			existingObjects: map[tenancy.Cluster][]string{
 				tenancy.Cluster("root:foo"): {"bar"},
 			},
-			discovery: map[logicalcluster.Name][]*metav1.APIResourceList{
+			discovery: map[logicalcluster.Path][]*metav1.APIResourceList{
 				logicalcluster.New("root:foo:bar"): {&metav1.APIResourceList{
 					GroupVersion: "tenancy.kcp.dev/v1alpha1",
 					APIResources: []metav1.APIResource{{Name: "workspaces"}},
@@ -413,8 +413,8 @@ func TestUse(t *testing.T) {
 				Clusters:  map[string]*clientcmdapi.Cluster{"workspace.kcp.dev/current": {Server: "https://test/clusters/root:foo"}},
 				AuthInfos: map[string]*clientcmdapi.AuthInfo{"test": {Token: "test"}},
 			},
-			getWorkspaceErrors: map[logicalcluster.Name]error{logicalcluster.New("root:foo"): errors.NewForbidden(schema.GroupResource{}, "bar", fmt.Errorf("not allowed"))},
-			discovery: map[logicalcluster.Name][]*metav1.APIResourceList{
+			getWorkspaceErrors: map[logicalcluster.Path]error{logicalcluster.New("root:foo"): errors.NewForbidden(schema.GroupResource{}, "bar", fmt.Errorf("not allowed"))},
+			discovery: map[logicalcluster.Path][]*metav1.APIResourceList{
 				logicalcluster.New("root:foo:bar"): {&metav1.APIResourceList{
 					GroupVersion: "tenancy.kcp.dev/v1alpha1",
 					APIResources: []metav1.APIResource{{Name: "workspaces"}},
@@ -442,8 +442,8 @@ func TestUse(t *testing.T) {
 				Clusters:  map[string]*clientcmdapi.Cluster{"workspace.kcp.dev/current": {Server: "https://test/clusters/root:foo"}},
 				AuthInfos: map[string]*clientcmdapi.AuthInfo{"test": {Token: "test"}},
 			},
-			getWorkspaceErrors: map[logicalcluster.Name]error{logicalcluster.New("root:foo"): errors.NewNotFound(schema.GroupResource{}, "bar")},
-			discoveryErrors: map[logicalcluster.Name]error{
+			getWorkspaceErrors: map[logicalcluster.Path]error{logicalcluster.New("root:foo"): errors.NewNotFound(schema.GroupResource{}, "bar")},
+			discoveryErrors: map[logicalcluster.Path]error{
 				logicalcluster.New("root:foo:foe"): errors.NewForbidden(schema.GroupResource{}, "", fmt.Errorf("forbidden")),
 			},
 			param:      "root:foo:foe",
@@ -457,8 +457,8 @@ func TestUse(t *testing.T) {
 				Clusters:  map[string]*clientcmdapi.Cluster{"workspace.kcp.dev/current": {Server: "https://test/clusters/root:foo"}},
 				AuthInfos: map[string]*clientcmdapi.AuthInfo{"test": {Token: "test"}},
 			},
-			getWorkspaceErrors: map[logicalcluster.Name]error{logicalcluster.New("root:foo"): errors.NewForbidden(schema.GroupResource{}, "bar", fmt.Errorf("not allowed"))},
-			discoveryErrors: map[logicalcluster.Name]error{
+			getWorkspaceErrors: map[logicalcluster.Path]error{logicalcluster.New("root:foo"): errors.NewForbidden(schema.GroupResource{}, "bar", fmt.Errorf("not allowed"))},
+			discoveryErrors: map[logicalcluster.Path]error{
 				logicalcluster.New("root:foo:foe"): errors.NewForbidden(schema.GroupResource{}, "", fmt.Errorf("forbidden")),
 			},
 			param:      "root:foo:foe",
@@ -1255,7 +1255,7 @@ func TestUse(t *testing.T) {
 
 			for lcluster, d := range tt.discovery {
 				if client.Resources == nil {
-					client.Resources = map[logicalcluster.Name][]*metav1.APIResourceList{}
+					client.Resources = map[logicalcluster.Path][]*metav1.APIResourceList{}
 				}
 				client.Resources[lcluster] = d
 			}
@@ -1532,10 +1532,10 @@ func parseURLOrDie(host string) *url.URL {
 
 type fakeClusterClientWithDiscoveryErrors struct {
 	*kcpfakeclient.ClusterClientset
-	discoveryErrs map[logicalcluster.Name]error
+	discoveryErrs map[logicalcluster.Path]error
 }
 
-func (f fakeClusterClientWithDiscoveryErrors) Cluster(cluster logicalcluster.Name) kcpclient.Interface {
+func (f fakeClusterClientWithDiscoveryErrors) Cluster(cluster logicalcluster.Path) kcpclient.Interface {
 	return fakeClientWithDiscoveryErrors{f.ClusterClientset.Cluster(cluster), f.discoveryErrs[cluster]}
 }
 

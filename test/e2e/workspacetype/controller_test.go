@@ -50,7 +50,7 @@ func TestClusterWorkspaceTypes(t *testing.T) {
 	type runningServer struct {
 		framework.RunningServer
 		kcpClusterClient kcpclientset.ClusterInterface
-		orgClusterName   logicalcluster.Name
+		orgClusterName   logicalcluster.Path
 	}
 	var testCases = []struct {
 		name string

@@ -250,7 +250,7 @@ func getAcceptedPermissionClaims(identityHash string) []apisv1alpha1.AcceptableP
 	}
 }
 
-func bindConsumerToProvider(ctx context.Context, consumerWorkspace logicalcluster.Name, providerClusterName tenancy.Cluster, t *testing.T, kcpClusterClients kcpclientset.ClusterInterface, cfg *rest.Config, identityHash string) {
+func bindConsumerToProvider(ctx context.Context, consumerWorkspace logicalcluster.Path, providerClusterName tenancy.Cluster, t *testing.T, kcpClusterClients kcpclientset.ClusterInterface, cfg *rest.Config, identityHash string) {
 	t.Logf("Create an APIBinding in consumer workspace %q that points to the today-cowboys export from %q", consumerWorkspace, providerClusterName)
 	apiBinding := &apisv1alpha1.APIBinding{
 		ObjectMeta: metav1.ObjectMeta{

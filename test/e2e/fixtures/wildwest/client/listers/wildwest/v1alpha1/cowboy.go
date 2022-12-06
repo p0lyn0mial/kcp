@@ -39,7 +39,7 @@ type CowboyClusterLister interface {
 	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*wildwestv1alpha1.Cowboy, err error)
 	// Cluster returns a lister that can list and get Cowboys in one workspace.
-	Cluster(cluster logicalcluster.Name) CowboyLister
+	Cluster(cluster logicalcluster.Path) CowboyLister
 	CowboyClusterListerExpansion
 }
 
@@ -66,7 +66,7 @@ func (s *cowboyClusterLister) List(selector labels.Selector) (ret []*wildwestv1a
 }
 
 // Cluster scopes the lister to one workspace, allowing users to list and get Cowboys.
-func (s *cowboyClusterLister) Cluster(cluster logicalcluster.Name) CowboyLister {
+func (s *cowboyClusterLister) Cluster(cluster logicalcluster.Path) CowboyLister {
 	return &cowboyLister{indexer: s.indexer, cluster: cluster}
 }
 
@@ -84,7 +84,7 @@ type CowboyLister interface {
 // cowboyLister can list all Cowboys inside a workspace or scope down to a CowboyLister for one namespace.
 type cowboyLister struct {
 	indexer cache.Indexer
-	cluster logicalcluster.Name
+	cluster logicalcluster.Path
 }
 
 // List lists all Cowboys in the indexer for a workspace.
@@ -116,7 +116,7 @@ type CowboyNamespaceLister interface {
 // All objects returned here must be treated as read-only.
 type cowboyNamespaceLister struct {
 	indexer   cache.Indexer
-	cluster   logicalcluster.Name
+	cluster   logicalcluster.Path
 	namespace string
 }
 

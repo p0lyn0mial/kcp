@@ -47,7 +47,7 @@ type reconciler interface {
 // statusReconciler reconciles Location objects' status.
 type statusReconciler struct {
 	listSyncTargets func(clusterName tenancy.Cluster) ([]*workloadv1alpha1.SyncTarget, error)
-	updateLocation  func(ctx context.Context, clusterName logicalcluster.Name, location *schedulingv1alpha1.Location) (*schedulingv1alpha1.Location, error)
+	updateLocation  func(ctx context.Context, clusterName logicalcluster.Path, location *schedulingv1alpha1.Location) (*schedulingv1alpha1.Location, error)
 	enqueueAfter    func(*schedulingv1alpha1.Location, time.Duration)
 }
 
@@ -127,6 +127,6 @@ func (c *controller) listSyncTarget(clusterName tenancy.Cluster) ([]*workloadv1a
 	return c.syncTargetLister.Cluster(clusterName.Path()).List(labels.Everything())
 }
 
-func (c *controller) updateLocation(ctx context.Context, clusterName logicalcluster.Name, location *schedulingv1alpha1.Location) (*schedulingv1alpha1.Location, error) {
+func (c *controller) updateLocation(ctx context.Context, clusterName logicalcluster.Path, location *schedulingv1alpha1.Location) (*schedulingv1alpha1.Location, error) {
 	return c.kcpClusterClient.Cluster(clusterName).SchedulingV1alpha1().Locations().Update(ctx, location, metav1.UpdateOptions{})
 }

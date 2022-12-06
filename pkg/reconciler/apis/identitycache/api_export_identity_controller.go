@@ -66,13 +66,13 @@ func NewApiExportIdentityProviderController(
 
 	c := &controller{
 		queue: queue,
-		createConfigMap: func(ctx context.Context, cluster logicalcluster.Name, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+		createConfigMap: func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			return kubeClusterClient.Cluster(cluster).CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
 		},
 		getConfigMap: func(clusterName tenancy.Cluster, namespace, name string) (*corev1.ConfigMap, error) {
 			return configMapInformer.Lister().Cluster(clusterName.Path()).ConfigMaps(namespace).Get(name)
 		},
-		updateConfigMap: func(ctx context.Context, cluster logicalcluster.Name, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+		updateConfigMap: func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			return kubeClusterClient.Cluster(cluster).CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
 		},
 		listAPIExportsFromRemoteShard: func(clusterName tenancy.Cluster) ([]*apisv1alpha1.APIExport, error) {
@@ -174,8 +174,8 @@ func (c *controller) processNextWorkItem(ctx context.Context) bool {
 
 type controller struct {
 	queue                         workqueue.RateLimitingInterface
-	createConfigMap               func(ctx context.Context, cluster logicalcluster.Name, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
+	createConfigMap               func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
 	getConfigMap                  func(clusterName tenancy.Cluster, namespace, name string) (*corev1.ConfigMap, error)
-	updateConfigMap               func(ctx context.Context, cluster logicalcluster.Name, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
+	updateConfigMap               func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
 	listAPIExportsFromRemoteShard func(clusterName tenancy.Cluster) ([]*apisv1alpha1.APIExport, error)
 }

@@ -65,7 +65,7 @@ type BindComputeOptions struct {
 	LocationSelectorsStrings []string
 
 	// LocationWorkspace is the workspace for synctarget
-	LocationWorkspace logicalcluster.Name
+	LocationWorkspace logicalcluster.Path
 
 	// BindWaitTimeout is how long to wait for the placement to be created and successful.
 	BindWaitTimeout time.Duration
@@ -227,7 +227,7 @@ func bindReady(bindings []*apisv1alpha1.APIBinding, placement *schedulingv1alpha
 
 const maxBindingNamePrefixLength = validation.DNS1123SubdomainMaxLength - 1 - 8
 
-func apiBindingName(clusterName logicalcluster.Name, apiExportName string) string {
+func apiBindingName(clusterName logicalcluster.Path, apiExportName string) string {
 	maxLen := len(apiExportName)
 	if maxLen > maxBindingNamePrefixLength {
 		maxLen = maxBindingNamePrefixLength

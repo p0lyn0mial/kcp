@@ -53,7 +53,7 @@ func WithRequiredGroups(groups ...string) ClusterWorkspaceOption {
 	}
 }
 
-func WithType(path logicalcluster.Name, name tenancyv1alpha1.ClusterWorkspaceTypeName) ClusterWorkspaceOption {
+func WithType(path logicalcluster.Path, name tenancyv1alpha1.ClusterWorkspaceTypeName) ClusterWorkspaceOption {
 	return func(ws *tenancyv1alpha1.ClusterWorkspace) {
 		ws.Spec.Type = tenancyv1alpha1.ClusterWorkspaceTypeReference{
 			Name: name,
@@ -69,7 +69,7 @@ func WithName(s string, formatArgs ...interface{}) ClusterWorkspaceOption {
 	}
 }
 
-func NewWorkspaceFixture(t *testing.T, server RunningServer, orgClusterName logicalcluster.Name, options ...ClusterWorkspaceOption) (clusterName tenancy.Cluster) {
+func NewWorkspaceFixture(t *testing.T, server RunningServer, orgClusterName logicalcluster.Path, options ...ClusterWorkspaceOption) (clusterName tenancy.Cluster) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	t.Cleanup(cancelFunc)
 

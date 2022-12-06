@@ -193,7 +193,7 @@ func (o *apiBindingAdmission) Validate(ctx context.Context, a admission.Attribut
 	return nil
 }
 
-func (o *apiBindingAdmission) checkAPIExportAccess(ctx context.Context, user user.Info, apiExportClusterName logicalcluster.Name, apiExportName string) error {
+func (o *apiBindingAdmission) checkAPIExportAccess(ctx context.Context, user user.Info, apiExportClusterName logicalcluster.Path, apiExportName string) error {
 	logger := klog.FromContext(ctx)
 	authz, err := o.createAuthorizer(apiExportClusterName, o.deepSARClient)
 	if err != nil {

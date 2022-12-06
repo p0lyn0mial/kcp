@@ -44,7 +44,7 @@ import (
 // CowboyClusterInformer provides access to a shared informer and lister for
 // Cowboys.
 type CowboyClusterInformer interface {
-	Cluster(logicalcluster.Name) CowboyInformer
+	Cluster(logicalcluster.Path) CowboyInformer
 	Informer() kcpcache.ScopeableSharedIndexInformer
 	Lister() wildwestv1alpha1listers.CowboyClusterLister
 }
@@ -109,7 +109,7 @@ type CowboyInformer interface {
 	Lister() wildwestv1alpha1listers.CowboyLister
 }
 
-func (f *cowboyClusterInformer) Cluster(cluster logicalcluster.Name) CowboyInformer {
+func (f *cowboyClusterInformer) Cluster(cluster logicalcluster.Path) CowboyInformer {
 	return &cowboyInformer{
 		informer: f.Informer().Cluster(cluster),
 		lister:   f.Lister().Cluster(cluster),

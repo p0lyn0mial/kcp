@@ -138,7 +138,7 @@ func (c *controller) ensureSecretNamespaceExists(ctx context.Context, clusterNam
 	}
 }
 
-func (c *controller) createIdentitySecret(ctx context.Context, clusterName logicalcluster.Name, apiExportName string) error {
+func (c *controller) createIdentitySecret(ctx context.Context, clusterName logicalcluster.Path, apiExportName string) error {
 	secret, err := GenerateIdentitySecret(ctx, c.secretNamespace, apiExportName)
 	if err != nil {
 		return err

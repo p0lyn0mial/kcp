@@ -78,10 +78,10 @@ func NewController(
 
 	c := &Controller{
 		queue: queue,
-		listResources: func(ctx context.Context, cluster logicalcluster.Name, gvr schema.GroupVersionResource) (*metav1.PartialObjectMetadataList, error) {
+		listResources: func(ctx context.Context, cluster logicalcluster.Path, gvr schema.GroupVersionResource) (*metav1.PartialObjectMetadataList, error) {
 			return metadataClient.Cluster(cluster).Resource(gvr).Namespace(metav1.NamespaceAll).List(ctx, metav1.ListOptions{})
 		},
-		deleteResources: func(ctx context.Context, cluster logicalcluster.Name, gvr schema.GroupVersionResource, namespace string) error {
+		deleteResources: func(ctx context.Context, cluster logicalcluster.Path, gvr schema.GroupVersionResource, namespace string) error {
 			background := metav1.DeletePropagationBackground
 			opts := metav1.DeleteOptions{PropagationPolicy: &background}
 			return metadataClient.Cluster(cluster).Resource(gvr).Namespace(namespace).DeleteCollection(ctx, opts, metav1.ListOptions{})
@@ -120,8 +120,8 @@ type CommitFunc = func(context.Context, *Resource, *Resource) error
 type Controller struct {
 	queue workqueue.RateLimitingInterface
 
-	listResources   func(ctx context.Context, cluster logicalcluster.Name, gvr schema.GroupVersionResource) (*metav1.PartialObjectMetadataList, error)
-	deleteResources func(ctx context.Context, cluster logicalcluster.Name, gvr schema.GroupVersionResource, namespace string) error
+	listResources   func(ctx context.Context, cluster logicalcluster.Path, gvr schema.GroupVersionResource) (*metav1.PartialObjectMetadataList, error)
+	deleteResources func(ctx context.Context, cluster logicalcluster.Path, gvr schema.GroupVersionResource, namespace string) error
 
 	getAPIBinding func(cluster tenancy.Cluster, name string) (*apisv1alpha1.APIBinding, error)
 	commit        CommitFunc

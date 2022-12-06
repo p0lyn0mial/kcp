@@ -34,7 +34,7 @@ import (
 )
 
 type GenericClusterInformer interface {
-	Cluster(logicalcluster.Name) GenericInformer
+	Cluster(logicalcluster.Path) GenericInformer
 	Informer() kcpcache.ScopeableSharedIndexInformer
 	Lister() kcpcache.GenericClusterLister
 }
@@ -60,7 +60,7 @@ func (f *genericClusterInformer) Lister() kcpcache.GenericClusterLister {
 }
 
 // Cluster scopes to a GenericInformer.
-func (f *genericClusterInformer) Cluster(cluster logicalcluster.Name) GenericInformer {
+func (f *genericClusterInformer) Cluster(cluster logicalcluster.Path) GenericInformer {
 	return &genericInformer{
 		informer: f.Informer().Cluster(cluster),
 		lister:   f.Lister().ByCluster(cluster),

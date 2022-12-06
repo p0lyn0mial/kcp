@@ -117,7 +117,7 @@ func init() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := func(clusterName logicalcluster.Name) ([]*metav1.APIResourceList, error) {
+			fn := func(clusterName logicalcluster.Path) ([]*metav1.APIResourceList, error) {
 				return resources, tt.gvrError
 			}
 			mockMetadataClient := kcpfakemetadata.NewSimpleMetadataClient(scheme, tt.existingObject...)

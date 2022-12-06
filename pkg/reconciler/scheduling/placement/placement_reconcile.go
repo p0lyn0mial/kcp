@@ -68,7 +68,7 @@ func (c *controller) reconcile(ctx context.Context, placement *schedulingv1alpha
 	return utilserrors.NewAggregate(errs)
 }
 
-func (c *controller) listLocationsByPath(path logicalcluster.Name) ([]*schedulingv1alpha1.Location, error) {
+func (c *controller) listLocationsByPath(path logicalcluster.Path) ([]*schedulingv1alpha1.Location, error) {
 	objs, err := c.locationIndexer.ByIndex(indexers.ByLogicalClusterPath, path.String())
 	if err != nil {
 		return nil, err

@@ -121,7 +121,7 @@ func NewController(
 			return apiResourceSchema, err
 		},
 
-		createCRD: func(ctx context.Context, clusterName logicalcluster.Name, crd *apiextensionsv1.CustomResourceDefinition) (*apiextensionsv1.CustomResourceDefinition, error) {
+		createCRD: func(ctx context.Context, clusterName logicalcluster.Path, crd *apiextensionsv1.CustomResourceDefinition) (*apiextensionsv1.CustomResourceDefinition, error) {
 			return crdClusterClient.Cluster(clusterName).ApiextensionsV1().CustomResourceDefinitions().Create(ctx, crd, metav1.CreateOptions{})
 		},
 		getCRD: func(clusterName tenancy.Cluster, name string) (*apiextensionsv1.CustomResourceDefinition, error) {
@@ -240,7 +240,7 @@ type controller struct {
 
 	getAPIResourceSchema func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error)
 
-	createCRD func(ctx context.Context, clusterName logicalcluster.Name, crd *apiextensionsv1.CustomResourceDefinition) (*apiextensionsv1.CustomResourceDefinition, error)
+	createCRD func(ctx context.Context, clusterName logicalcluster.Path, crd *apiextensionsv1.CustomResourceDefinition) (*apiextensionsv1.CustomResourceDefinition, error)
 	getCRD    func(clusterName tenancy.Cluster, name string) (*apiextensionsv1.CustomResourceDefinition, error)
 	listCRDs  func(clusterName tenancy.Cluster) ([]*apiextensionsv1.CustomResourceDefinition, error)
 

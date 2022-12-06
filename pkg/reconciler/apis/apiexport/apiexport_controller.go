@@ -79,13 +79,13 @@ func NewController(
 		getNamespace: func(clusterName tenancy.Cluster, name string) (*corev1.Namespace, error) {
 			return namespaceInformer.Lister().Cluster(clusterName.Path()).Get(name)
 		},
-		createNamespace: func(ctx context.Context, clusterName logicalcluster.Name, ns *corev1.Namespace) error {
+		createNamespace: func(ctx context.Context, clusterName logicalcluster.Path, ns *corev1.Namespace) error {
 			_, err := kubeClusterClient.Cluster(clusterName).CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})
 			return err
 		},
 		secretLister:    secretInformer.Lister(),
 		secretNamespace: DefaultIdentitySecretNamespace,
-		createSecret: func(ctx context.Context, clusterName logicalcluster.Name, secret *corev1.Secret) error {
+		createSecret: func(ctx context.Context, clusterName logicalcluster.Path, secret *corev1.Secret) error {
 			_, err := kubeClusterClient.Cluster(clusterName).CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 			return err
 		},
@@ -189,13 +189,13 @@ type controller struct {
 	kubeClusterClient kcpkubernetesclientset.ClusterInterface
 
 	getNamespace    func(clusterName tenancy.Cluster, name string) (*corev1.Namespace, error)
-	createNamespace func(ctx context.Context, clusterName logicalcluster.Name, ns *corev1.Namespace) error
+	createNamespace func(ctx context.Context, clusterName logicalcluster.Path, ns *corev1.Namespace) error
 
 	secretLister    corev1listers.SecretClusterLister
 	secretNamespace string
 
 	getSecret    func(ctx context.Context, clusterName tenancy.Cluster, ns, name string) (*corev1.Secret, error)
-	createSecret func(ctx context.Context, clusterName logicalcluster.Name, secret *corev1.Secret) error
+	createSecret func(ctx context.Context, clusterName logicalcluster.Path, secret *corev1.Secret) error
 
 	getAPIBindingsForAPIExport func(clusterName tenancy.Cluster, name string) ([]interface{}, error)
 

@@ -152,7 +152,7 @@ func TestReconcile(t *testing.T) {
 				getNamespace: func(clusterName tenancy.Cluster, name string) (*corev1.Namespace, error) {
 					return &corev1.Namespace{}, nil
 				},
-				createNamespace: func(ctx context.Context, clusterName logicalcluster.Name, ns *corev1.Namespace) error {
+				createNamespace: func(ctx context.Context, clusterName logicalcluster.Path, ns *corev1.Namespace) error {
 					return nil
 				},
 				secretNamespace: "default-ns",
@@ -173,7 +173,7 @@ func TestReconcile(t *testing.T) {
 
 					return nil, apierrors.NewNotFound(corev1.Resource("secrets"), name)
 				},
-				createSecret: func(ctx context.Context, clusterName logicalcluster.Name, secret *corev1.Secret) error {
+				createSecret: func(ctx context.Context, clusterName logicalcluster.Path, secret *corev1.Secret) error {
 					createSecretCalled = true
 					return tc.createSecretError
 				},

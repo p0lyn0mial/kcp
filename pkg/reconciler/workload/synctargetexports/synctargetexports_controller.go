@@ -337,7 +337,7 @@ func (c *Controller) process(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Controller) getAPIExport(path logicalcluster.Name, name string) (*apisv1alpha1.APIExport, error) {
+func (c *Controller) getAPIExport(path logicalcluster.Path, name string) (*apisv1alpha1.APIExport, error) {
 	objs, err := c.apiExportsIndexer.ByIndex(indexers.ByLogicalClusterPath, path.String())
 	if err != nil {
 		return nil, err

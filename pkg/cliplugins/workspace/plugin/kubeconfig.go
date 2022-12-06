@@ -813,7 +813,7 @@ func (o *TreeOptions) Run(ctx context.Context) error {
 	return nil
 }
 
-func (o *TreeOptions) populateBranch(ctx context.Context, tree treeprint.Tree, name logicalcluster.Name) error {
+func (o *TreeOptions) populateBranch(ctx context.Context, tree treeprint.Tree, name logicalcluster.Path) error {
 	var b treeprint.Tree
 	if o.Full {
 		b = tree.AddBranch(name.String())

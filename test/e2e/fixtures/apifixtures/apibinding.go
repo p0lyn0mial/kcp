@@ -43,7 +43,7 @@ func BindToExport(
 	t *testing.T,
 	exportClusterName tenancy.Cluster,
 	apiExportName string,
-	bindingClusterName logicalcluster.Name,
+	bindingClusterName logicalcluster.Path,
 	clusterClient kcpclientset.ClusterInterface,
 ) {
 	binding := &apisv1alpha1.APIBinding{

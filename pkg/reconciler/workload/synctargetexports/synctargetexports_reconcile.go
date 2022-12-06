@@ -33,7 +33,7 @@ import (
 
 // exportReconciler updates syncedResource in SyncTarget status based on supportedAPIExports.
 type exportReconciler struct {
-	getAPIExport      func(path logicalcluster.Name, name string) (*apisv1alpha1.APIExport, error)
+	getAPIExport      func(path logicalcluster.Path, name string) (*apisv1alpha1.APIExport, error)
 	getResourceSchema func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error)
 }
 

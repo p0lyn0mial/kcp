@@ -115,7 +115,7 @@ func (s *Server) installKubeNamespaceController(ctx context.Context, config *res
 		return err
 	}
 
-	discoverResourcesFn := func(clusterName logicalcluster.Name) ([]*metav1.APIResourceList, error) {
+	discoverResourcesFn := func(clusterName logicalcluster.Path) ([]*metav1.APIResourceList, error) {
 		logicalClusterConfig := rest.CopyConfig(config)
 		logicalClusterConfig.Host += clusterName.Path()
 		discoveryClient, err := discovery.NewDiscoveryClientForConfig(logicalClusterConfig)
@@ -302,7 +302,7 @@ func (s *Server) installWorkspaceDeletionController(ctx context.Context, config 
 	if err != nil {
 		return err
 	}
-	discoverResourcesFn := func(clusterName logicalcluster.Name) ([]*metav1.APIResourceList, error) {
+	discoverResourcesFn := func(clusterName logicalcluster.Path) ([]*metav1.APIResourceList, error) {
 		logicalClusterConfig := rest.CopyConfig(config)
 		logicalClusterConfig.Host += clusterName.Path()
 		discoveryClient, err := discovery.NewDiscoveryClientForConfig(logicalClusterConfig)

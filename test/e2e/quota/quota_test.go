@@ -431,7 +431,7 @@ func TestClusterScopedQuota(t *testing.T) {
 
 func bootstrapCRD(
 	t *testing.T,
-	clusterName logicalcluster.Name,
+	clusterName logicalcluster.Path,
 	client kcpapiextensionsv1client.CustomResourceDefinitionClusterInterface,
 	crd *apiextensionsv1.CustomResourceDefinition,
 ) {

@@ -183,7 +183,7 @@ func TestSyncTargetCompatibleReconcile(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			getAPIExport := func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIExport, error) {
+			getAPIExport := func(clusterName logicalcluster.Path, name string) (*apisv1alpha1.APIExport, error) {
 				if tc.export == nil {
 					return nil, errors.NewNotFound(schema.GroupResource{}, name)
 				}

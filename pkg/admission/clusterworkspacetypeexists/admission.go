@@ -57,7 +57,7 @@ func Register(plugins *admission.Plugins) {
 				Handler:          admission.NewHandler(admission.Create, admission.Update),
 				createAuthorizer: delegated.NewDelegatedAuthorizer,
 			}
-			plugin.getType = func(path logicalcluster.Name, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error) {
+			plugin.getType = func(path logicalcluster.Path, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error) {
 				objs, err := plugin.typeIndexer.ByIndex(indexers.ByLogicalClusterPath, path.Join(name).String())
 				if err != nil {
 					return nil, err
@@ -83,7 +83,7 @@ func Register(plugins *admission.Plugins) {
 type clusterWorkspaceTypeExists struct {
 	*admission.Handler
 
-	getType func(path logicalcluster.Name, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error)
+	getType func(path logicalcluster.Path, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error)
 
 	typeIndexer            cache.Indexer
 	typeLister             tenancyv1alpha1listers.ClusterWorkspaceTypeClusterLister
@@ -202,7 +202,7 @@ func (o *clusterWorkspaceTypeExists) Admit(ctx context.Context, a admission.Attr
 	return updateUnstructured(u, ws)
 }
 
-func (o *clusterWorkspaceTypeExists) resolveTypeRef(workspacePath logicalcluster.Name, ref tenancyv1alpha1.ClusterWorkspaceTypeReference) (*tenancyv1alpha1.ClusterWorkspaceType, error) {
+func (o *clusterWorkspaceTypeExists) resolveTypeRef(workspacePath logicalcluster.Path, ref tenancyv1alpha1.ClusterWorkspaceTypeReference) (*tenancyv1alpha1.ClusterWorkspaceType, error) {
 	if ref.Path != "" {
 		cwt, err := o.getType(logicalcluster.New(ref.Path), string(ref.Name))
 		if err != nil {
@@ -410,10 +410,10 @@ type TransitiveTypeResolver interface {
 }
 
 type transitiveTypeResolver struct {
-	getter func(cluster logicalcluster.Name, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error)
+	getter func(cluster logicalcluster.Path, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error)
 }
 
-func NewTransitiveTypeResolver(getter func(cluster logicalcluster.Name, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error)) TransitiveTypeResolver {
+func NewTransitiveTypeResolver(getter func(cluster logicalcluster.Path, name string) (*tenancyv1alpha1.ClusterWorkspaceType, error)) TransitiveTypeResolver {
 	return &transitiveTypeResolver{
 		getter: getter,
 	}
