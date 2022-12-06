@@ -90,7 +90,7 @@ func (l *workspaceLimitRanger) Admit(ctx context.Context, a admission.Attributes
 	if err != nil {
 		return apierrors.NewInternalError(err)
 	}
-	delegate, err := l.delegateFor(clusterName)
+	delegate, err := l.delegateFor(clusterName.Path())
 	if err != nil {
 		return apierrors.NewInternalError(err)
 	}
@@ -103,7 +103,7 @@ func (l *workspaceLimitRanger) Validate(ctx context.Context, a admission.Attribu
 	if err != nil {
 		return apierrors.NewInternalError(err)
 	}
-	delegate, err := l.delegateFor(clusterName)
+	delegate, err := l.delegateFor(clusterName.Path())
 	if err != nil {
 		return apierrors.NewInternalError(err)
 	}
@@ -132,7 +132,11 @@ func (l *workspaceLimitRanger) delegateFor(cluster logicalcluster.Path) (*limitr
 	if err != nil {
 		return nil, err
 	}
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return nil, fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	delegate.SetExternalKubeClientSet(l.client.Cluster(cluster))
-	delegate.SetExternalKubeLister(l.lister.Cluster(cluster))
+	delegate.SetExternalKubeLister(l.lister.Cluster(clusterName))
 	return delegate, nil
 }
