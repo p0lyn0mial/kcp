@@ -95,7 +95,7 @@ func (o *apiBindingAdmission) Admit(ctx context.Context, a admission.Attributes,
 		return admission.NewForbidden(a, fmt.Errorf("error determining workspace: %w", err))
 	}
 	if apiBinding.Spec.Reference.Cluster.Identifier == "" {
-		apiBinding.Spec.Reference.Cluster.Identifier = tenancy.Cluster(cluster.Name.String())
+		apiBinding.Spec.Reference.Cluster.Identifier = logicalcluster.Name(cluster.Name.String())
 	}
 
 	// set labels

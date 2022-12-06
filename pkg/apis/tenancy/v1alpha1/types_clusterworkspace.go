@@ -27,7 +27,7 @@ import (
 )
 
 // RootCluster is the root of ClusterWorkspace based logical clusters.
-var RootCluster = tenancy.Cluster("root")
+var RootCluster = logicalcluster.Name("root")
 
 // ClusterWorkspaceReservedNames defines the set of names that may not be used
 // on user-supplied ClusterWorkspaces.

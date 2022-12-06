@@ -114,7 +114,7 @@ func (b *APIBinder) reconcile(ctx context.Context, this *tenancyv1alpha1.ThisWor
 		exportToBinding[*binding.Spec.Reference.Cluster] = binding
 	}
 
-	requiredExportRefs := map[tenancyv1alpha1.APIExportReference]tenancy.Cluster{}
+	requiredExportRefs := map[tenancyv1alpha1.APIExportReference]logicalcluster.Name{}
 	someExportsMissing := false
 
 	for _, cwt := range cwts {

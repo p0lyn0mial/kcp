@@ -150,7 +150,7 @@ func TestLocationStatusReconciler(t *testing.T) {
 			var requeuedAfter time.Duration
 			updates := map[string]*schedulingv1alpha1.Location{}
 			r := &statusReconciler{
-				listSyncTargets: func(clusterName tenancy.Cluster) ([]*workloadv1alpha1.SyncTarget, error) {
+				listSyncTargets: func(clusterName logicalcluster.Name) ([]*workloadv1alpha1.SyncTarget, error) {
 					if tc.listSyncTargetError != nil {
 						return nil, tc.listSyncTargetError
 					}

@@ -305,7 +305,7 @@ func TestGarbageCollectorNormalCRDs(t *testing.T) {
 	sheriffsGVR := schema.GroupVersionResource{Group: group, Resource: "sheriffs", Version: "v1"}
 
 	// Test with 2 workspaces to make sure GC works for both
-	workspaces := []tenancy.Cluster{ws1, ws2}
+	workspaces := []logicalcluster.Name{ws1, ws2}
 	for _, ws := range workspaces {
 		t.Logf("Creating owner sheriff")
 		owner, err := dynamicClusterClient.Cluster(ws.Path()).Resource(sheriffsGVR).Namespace("default").

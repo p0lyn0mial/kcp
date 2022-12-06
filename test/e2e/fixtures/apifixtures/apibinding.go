@@ -41,7 +41,7 @@ import (
 func BindToExport(
 	ctx context.Context,
 	t *testing.T,
-	exportClusterName tenancy.Cluster,
+	exportClusterName logicalcluster.Name,
 	apiExportName string,
 	bindingClusterName logicalcluster.Path,
 	clusterClient kcpclientset.ClusterInterface,

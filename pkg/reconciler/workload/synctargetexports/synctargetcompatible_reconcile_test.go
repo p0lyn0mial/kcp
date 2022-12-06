@@ -189,7 +189,7 @@ func TestSyncTargetCompatibleReconcile(t *testing.T) {
 				}
 				return tc.export, nil
 			}
-			getResourceSchema := func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error) {
+			getResourceSchema := func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIResourceSchema, error) {
 				for _, schema := range tc.schemas {
 					if schema.Name == name {
 						return schema, nil
@@ -198,7 +198,7 @@ func TestSyncTargetCompatibleReconcile(t *testing.T) {
 
 				return nil, errors.NewNotFound(schema.GroupResource{}, name)
 			}
-			listAPIResourceImports := func(clusterName tenancy.Cluster) ([]*apiresourcev1alpha1.APIResourceImport, error) {
+			listAPIResourceImports := func(clusterName logicalcluster.Name) ([]*apiresourcev1alpha1.APIResourceImport, error) {
 				return tc.apiResourceImport, nil
 			}
 

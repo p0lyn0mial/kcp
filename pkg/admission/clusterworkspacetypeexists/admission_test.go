@@ -851,7 +851,7 @@ func newThisWorkspace(clusterName string) thisWsBuilder {
 	}}
 }
 
-func (b thisWsBuilder) withType(cluster tenancy.Cluster, name string) thisWsBuilder {
+func (b thisWsBuilder) withType(cluster logicalcluster.Name, name string) thisWsBuilder {
 	if b.Annotations == nil {
 		b.Annotations = map[string]string{}
 	}

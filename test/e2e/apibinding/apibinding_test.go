@@ -179,7 +179,7 @@ func TestAPIBinding(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	bindConsumerToProvider := func(consumerWorkspace logicalcluster.Path, providerClusterName tenancy.Cluster) {
+	bindConsumerToProvider := func(consumerWorkspace logicalcluster.Path, providerClusterName logicalcluster.Name) {
 		t.Logf("Create an APIBinding in %q that points to the today-cowboys export from %q", consumerWorkspace, providerClusterName)
 		apiBinding := &apisv1alpha1.APIBinding{
 			ObjectMeta: metav1.ObjectMeta{

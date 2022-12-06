@@ -80,7 +80,7 @@ func (r *schedulingReconciler) reconcile(ctx context.Context, workspace *tenancy
 	case tenancyv1alpha1.WorkspacePhaseScheduling:
 		shardNameHash, hasShard := workspace.Annotations[workspaceShardAnnotationKey]
 		clusterNameString, hasCluster := workspace.Annotations[workspaceClusterAnnotationKey]
-		clusterName := tenancy.Cluster(clusterNameString)
+		clusterName := logicalcluster.Name(clusterNameString)
 		hasFinalizer := sets.NewString(workspace.Finalizers...).Has(tenancyv1alpha1.ThisWorkspaceFinalizer)
 
 		if !hasShard {

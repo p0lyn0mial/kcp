@@ -105,7 +105,7 @@ func TestPlacementPhase(t *testing.T) {
 					SelectedLocation: testCase.selectedLocation,
 				},
 			}
-			listNamespacesWithAnnotation := func(clusterName tenancy.Cluster) ([]*corev1.Namespace, error) {
+			listNamespacesWithAnnotation := func(clusterName logicalcluster.Name) ([]*corev1.Namespace, error) {
 				if testCase.ns == nil {
 					return []*corev1.Namespace{}, nil
 				}

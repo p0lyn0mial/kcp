@@ -80,7 +80,7 @@ func (p *crdNoOverlappingGVRAdmission) Validate(ctx context.Context, a admission
 	if err != nil {
 		return fmt.Errorf("failed to retrieve cluster from context: %w", err)
 	}
-	clusterName := tenancy.Cluster(cluster.String()) // TODO(sttts): remove this cast once ClusterNameFrom returns a tenancy.Cluster
+	clusterName := logicalcluster.Name(cluster.String()) // TODO(sttts): remove this cast once ClusterNameFrom returns a logicalcluster.Name
 	// ignore CRDs targeting system and non-root workspaces
 	if clusterName == apibinding.ShadowWorkspaceName || clusterName == "system:admin" {
 		return nil
@@ -105,6 +105,6 @@ func (p *crdNoOverlappingGVRAdmission) Validate(ctx context.Context, a admission
 	return nil
 }
 
-func (p *crdNoOverlappingGVRAdmission) listAPIBindingsFor(clusterName tenancy.Cluster) ([]*apisv1alpha1.APIBinding, error) {
+func (p *crdNoOverlappingGVRAdmission) listAPIBindingsFor(clusterName logicalcluster.Name) ([]*apisv1alpha1.APIBinding, error) {
 	return p.apiBindingClusterLister.Cluster(clusterName.Path()).List(labels.Everything())
 }

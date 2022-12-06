@@ -275,7 +275,7 @@ func TestKubeQuotaNormalCRDs(t *testing.T) {
 	sheriffsObjectCountName := corev1.ResourceName("count/sheriffs." + group)
 
 	// Test with 2 workspaces to make sure quota is independent per workspace
-	workspaces := []tenancy.Cluster{ws1, ws2}
+	workspaces := []logicalcluster.Name{ws1, ws2}
 	for i, ws := range workspaces {
 		wsIndex := i + 1
 		quotaName := group

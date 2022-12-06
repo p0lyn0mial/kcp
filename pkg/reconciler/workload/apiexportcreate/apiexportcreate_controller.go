@@ -214,7 +214,7 @@ func (c *controller) processNextWorkItem(ctx context.Context) bool {
 
 func (c *controller) process(ctx context.Context, key string) error {
 	logger := klog.FromContext(ctx)
-	clusterName := tenancy.Cluster(key)
+	clusterName := logicalcluster.Name(key)
 
 	syncTargets, err := c.syncTargetLister.Cluster(clusterName.Path()).List(labels.Everything())
 	if err != nil {

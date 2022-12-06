@@ -173,7 +173,7 @@ func TestMaximalPermissionPolicyAuthorizer(t *testing.T) {
 	user3KcpClient, err := kcpclientset.NewForConfig(framework.UserConfig("user-3", rest.CopyConfig(cfg)))
 	require.NoError(t, err, "failed to construct dynamic cluster client for server")
 
-	serviceProviderClusterNames := []tenancy.Cluster{rbacServiceProviderClusterName, serviceProvider2Workspace}
+	serviceProviderClusterNames := []logicalcluster.Name{rbacServiceProviderClusterName, serviceProvider2Workspace}
 	framework.AdmitWorkspaceAccess(t, ctx, kubeClusterClient, orgClusterName.Path(), []string{"user-1", "user-2", "user-3"}, nil, false)
 
 	// Set up service provider workspace.
@@ -181,7 +181,7 @@ func TestMaximalPermissionPolicyAuthorizer(t *testing.T) {
 		setUpServiceProvider(ctx, dynamicClients, kcpClusterClient, kubeClusterClient, serviceProviderClusterName.Path(), rbacServiceProviderClusterName.Path(), cfg, t)
 	}
 
-	bindConsumerToProvider := func(consumerWorkspace logicalcluster.Path, providerClusterName tenancy.Cluster) {
+	bindConsumerToProvider := func(consumerWorkspace logicalcluster.Path, providerClusterName logicalcluster.Name) {
 		t.Logf("Create an APIBinding in consumer workspace %q that points to the today-cowboys export from %q", consumer1ClusterName, rbacServiceProviderClusterName)
 		apiBinding := &apisv1alpha1.APIBinding{
 			ObjectMeta: metav1.ObjectMeta{
@@ -221,7 +221,7 @@ func TestMaximalPermissionPolicyAuthorizer(t *testing.T) {
 		require.True(t, resourceExists(resources, "cowboys"), "consumer workspace %q discovery is missing cowboys resource", consumerWorkspace)
 	}
 
-	m := map[tenancy.Cluster]tenancy.Cluster{
+	m := map[logicalcluster.Name]logicalcluster.Name{
 		rbacServiceProviderClusterName: consumer1ClusterName,
 		serviceProvider2Workspace:      consumer2ClusterName,
 	}

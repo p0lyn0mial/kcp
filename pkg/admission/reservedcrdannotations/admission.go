@@ -71,7 +71,7 @@ func (o *reservedCRDAnnotations) Validate(ctx context.Context, a admission.Attri
 	if err != nil {
 		return fmt.Errorf("failed to retrieve cluster from context: %w", err)
 	}
-	clusterName := tenancy.Cluster(cluster.String()) // TODO(sttts): remove when ClusterFromfrom returns a tenancy.Cluster
+	clusterName := logicalcluster.Name(cluster.String()) // TODO(sttts): remove when ClusterFromfrom returns a logicalcluster.Name
 	if clusterName == apibinding.ShadowWorkspaceName {
 		return nil
 	}

@@ -120,7 +120,7 @@ func (c *controller) reconcile(ctx context.Context, apiExport *apisv1alpha1.APIE
 	return nil
 }
 
-func (c *controller) ensureSecretNamespaceExists(ctx context.Context, clusterName tenancy.Cluster) {
+func (c *controller) ensureSecretNamespaceExists(ctx context.Context, clusterName logicalcluster.Name) {
 	logger := klog.FromContext(ctx)
 	ctx = klog.NewContext(ctx, logger)
 	if _, err := c.getNamespace(clusterName, c.secretNamespace); errors.IsNotFound(err) {
@@ -155,7 +155,7 @@ func (c *controller) createIdentitySecret(ctx context.Context, clusterName logic
 	return nil
 }
 
-func (c *controller) updateOrVerifyIdentitySecretHash(ctx context.Context, clusterName tenancy.Cluster, apiExport *apisv1alpha1.APIExport) error {
+func (c *controller) updateOrVerifyIdentitySecretHash(ctx context.Context, clusterName logicalcluster.Name, apiExport *apisv1alpha1.APIExport) error {
 	secret, err := c.getSecret(ctx, clusterName, apiExport.Spec.Identity.SecretRef.Namespace, apiExport.Spec.Identity.SecretRef.Name)
 	if err != nil {
 		return err

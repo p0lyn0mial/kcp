@@ -38,8 +38,8 @@ import (
 // TODO(qiujian06) this should be done in syncer when resource schema(or crd) is exposed by syncer virtual workspace.
 type apiCompatibleReconciler struct {
 	getAPIExport           func(path logicalcluster.Path, name string) (*apisv1alpha1.APIExport, error)
-	getResourceSchema      func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error)
-	listAPIResourceImports func(clusterName tenancy.Cluster) ([]*apiresourcev1alpha1.APIResourceImport, error)
+	getResourceSchema      func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIResourceSchema, error)
+	listAPIResourceImports func(clusterName logicalcluster.Name) ([]*apiresourcev1alpha1.APIResourceImport, error)
 }
 
 func (e *apiCompatibleReconciler) reconcile(ctx context.Context, syncTarget *workloadv1alpha1.SyncTarget) (*workloadv1alpha1.SyncTarget, error) {

@@ -60,11 +60,11 @@ func TestNamespaceScheduler(t *testing.T) {
 
 	type runningServer struct {
 		framework.RunningServer
-		clusterName    tenancy.Cluster
+		clusterName    logicalcluster.Name
 		client         kubernetes.Interface
 		kcpClient      clientset.Interface
 		expect         registerNamespaceExpectation
-		orgClusterName tenancy.Cluster
+		orgClusterName logicalcluster.Name
 	}
 
 	var testCases = []struct {

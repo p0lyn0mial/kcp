@@ -493,7 +493,7 @@ func (b *bindingBuilder) withName(name string) *bindingBuilder {
 	return b
 }
 
-func (b *bindingBuilder) withAbsoluteWorkspaceReference(cluster tenancy.Cluster, exportName string) *bindingBuilder {
+func (b *bindingBuilder) withAbsoluteWorkspaceReference(cluster logicalcluster.Name, exportName string) *bindingBuilder {
 	b.Spec.Reference.Cluster = &apisv1alpha1.ClusterExportReference{
 		Identifier: cluster,
 		ExportName: exportName,

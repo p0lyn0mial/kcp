@@ -69,13 +69,13 @@ func NewApiExportIdentityProviderController(
 		createConfigMap: func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			return kubeClusterClient.Cluster(cluster).CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
 		},
-		getConfigMap: func(clusterName tenancy.Cluster, namespace, name string) (*corev1.ConfigMap, error) {
+		getConfigMap: func(clusterName logicalcluster.Name, namespace, name string) (*corev1.ConfigMap, error) {
 			return configMapInformer.Lister().Cluster(clusterName.Path()).ConfigMaps(namespace).Get(name)
 		},
 		updateConfigMap: func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			return kubeClusterClient.Cluster(cluster).CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
 		},
-		listAPIExportsFromRemoteShard: func(clusterName tenancy.Cluster) ([]*apisv1alpha1.APIExport, error) {
+		listAPIExportsFromRemoteShard: func(clusterName logicalcluster.Name) ([]*apisv1alpha1.APIExport, error) {
 			return remoteShardApiExportInformer.Lister().Cluster(clusterName.Path()).List(labels.Everything())
 		},
 	}
@@ -92,7 +92,7 @@ func NewApiExportIdentityProviderController(
 				runtime.HandleError(err)
 				return false
 			}
-			clusterName := tenancy.Cluster(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns tenancy.Cluster
+			clusterName := logicalcluster.Name(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns logicalcluster.Name
 			return clusterName == tenancyv1alpha1.RootCluster
 		},
 		Handler: cache.ResourceEventHandlerFuncs{
@@ -114,7 +114,7 @@ func NewApiExportIdentityProviderController(
 				runtime.HandleError(err)
 				return false
 			}
-			clusterName := tenancy.Cluster(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns tenancy.Cluster
+			clusterName := logicalcluster.Name(cluster.String()) // TODO: remove when SplitMetaClusterNamespaceKey returns logicalcluster.Name
 			if clusterName != configshard.SystemShardCluster {
 				return false
 			}
@@ -175,7 +175,7 @@ func (c *controller) processNextWorkItem(ctx context.Context) bool {
 type controller struct {
 	queue                         workqueue.RateLimitingInterface
 	createConfigMap               func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
-	getConfigMap                  func(clusterName tenancy.Cluster, namespace, name string) (*corev1.ConfigMap, error)
+	getConfigMap                  func(clusterName logicalcluster.Name, namespace, name string) (*corev1.ConfigMap, error)
 	updateConfigMap               func(ctx context.Context, cluster logicalcluster.Path, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error)
-	listAPIExportsFromRemoteShard func(clusterName tenancy.Cluster) ([]*apisv1alpha1.APIExport, error)
+	listAPIExportsFromRemoteShard func(clusterName logicalcluster.Name) ([]*apisv1alpha1.APIExport, error)
 }

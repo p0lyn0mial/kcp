@@ -266,7 +266,7 @@ func (o *BindComputeOptions) applyAPIBinding(ctx context.Context, client kcpclie
 				Reference: apisv1alpha1.ExportReference{
 					Cluster: &apisv1alpha1.ClusterExportReference{
 						// TODO(sttts): this will break for real paths. We probably only support this when the user has read access to the export workspace.
-						Identifier: tenancy.Cluster(clusterName.String()),
+						Identifier: logicalcluster.Name(clusterName.String()),
 						ExportName: name,
 					},
 				},

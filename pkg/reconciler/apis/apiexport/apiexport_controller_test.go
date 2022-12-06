@@ -149,14 +149,14 @@ func TestReconcile(t *testing.T) {
 			someOtherKey := "def"
 
 			c := &controller{
-				getNamespace: func(clusterName tenancy.Cluster, name string) (*corev1.Namespace, error) {
+				getNamespace: func(clusterName logicalcluster.Name, name string) (*corev1.Namespace, error) {
 					return &corev1.Namespace{}, nil
 				},
 				createNamespace: func(ctx context.Context, clusterName logicalcluster.Path, ns *corev1.Namespace) error {
 					return nil
 				},
 				secretNamespace: "default-ns",
-				getSecret: func(ctx context.Context, clusterName tenancy.Cluster, ns, name string) (*corev1.Secret, error) {
+				getSecret: func(ctx context.Context, clusterName logicalcluster.Name, ns, name string) (*corev1.Secret, error) {
 					if tc.secretExists {
 						secret := &corev1.Secret{
 							Data: map[string][]byte{},
@@ -177,7 +177,7 @@ func TestReconcile(t *testing.T) {
 					createSecretCalled = true
 					return tc.createSecretError
 				},
-				getAPIBindingsForAPIExport: func(_ tenancy.Cluster, _ string) ([]interface{}, error) {
+				getAPIBindingsForAPIExport: func(_ logicalcluster.Name, _ string) ([]interface{}, error) {
 					if len(tc.apiBindings) > 0 {
 						return tc.apiBindings, nil
 					}

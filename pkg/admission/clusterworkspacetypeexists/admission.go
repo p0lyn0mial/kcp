@@ -336,7 +336,7 @@ func (o *clusterWorkspaceTypeExists) Validate(ctx context.Context, a admission.A
 			return admission.NewForbidden(a, err)
 		}
 
-		thisTypePath := tenancy.TemporaryCanonicalPath(tenancy.Cluster(cwtWorkspace.String())).Join(cwtName)
+		thisTypePath := tenancy.TemporaryCanonicalPath(logicalcluster.Name(cwtWorkspace.String())).Join(cwtName)
 		cwTypeString := logicalcluster.New(cw.Spec.Type.Path).Join(string(cw.Spec.Type.Name)).String()
 		if err := validateAllowedParents(parentAliases, cwtAliases, thisTypePath.String(), cwTypeString); err != nil {
 			return admission.NewForbidden(a, err)

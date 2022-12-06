@@ -129,7 +129,7 @@ func TestSyncTargetExportReconcile(t *testing.T) {
 				}
 				return tc.export, nil
 			}
-			getResourceSchema := func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error) {
+			getResourceSchema := func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIResourceSchema, error) {
 				for _, schema := range tc.schemas {
 					if schema.Name == name {
 						return schema, nil

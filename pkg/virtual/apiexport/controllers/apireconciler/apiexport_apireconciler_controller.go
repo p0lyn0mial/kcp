@@ -57,7 +57,7 @@ func NewAPIReconciler(
 	apiResourceSchemaInformer apisv1alpha1informers.APIResourceSchemaClusterInformer,
 	apiExportInformer apisv1alpha1informers.APIExportClusterInformer,
 	createAPIDefinition CreateAPIDefinitionFunc,
-	createAPIBindingAPIDefinition func(ctx context.Context, clusterName tenancy.Cluster, apiExportName string) (apidefinition.APIDefinition, error),
+	createAPIBindingAPIDefinition func(ctx context.Context, clusterName logicalcluster.Name, apiExportName string) (apidefinition.APIDefinition, error),
 ) (*APIReconciler, error) {
 	queue := workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ControllerName)
 
@@ -125,7 +125,7 @@ type APIReconciler struct {
 	queue workqueue.RateLimitingInterface
 
 	createAPIDefinition           CreateAPIDefinitionFunc
-	createAPIBindingAPIDefinition func(ctx context.Context, clusterName tenancy.Cluster, apiExportName string) (apidefinition.APIDefinition, error)
+	createAPIBindingAPIDefinition func(ctx context.Context, clusterName logicalcluster.Name, apiExportName string) (apidefinition.APIDefinition, error)
 
 	mutex   sync.RWMutex // protects the map, not the values!
 	apiSets map[dynamiccontext.APIDomainKey]apidefinition.APIDefinitionSet

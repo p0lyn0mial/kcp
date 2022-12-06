@@ -111,7 +111,7 @@ func BuildVirtualWorkspace(
 						cancelFn:      cancelFn,
 					}, nil
 				},
-				func(ctx context.Context, clusterName tenancy.Cluster, apiExportName string) (apidefinition.APIDefinition, error) {
+				func(ctx context.Context, clusterName logicalcluster.Name, apiExportName string) (apidefinition.APIDefinition, error) {
 					restProvider, err := provideAPIExportFilteredRestStorage(ctx, dynamicClusterClient, clusterName, apiExportName)
 					if err != nil {
 						return nil, err

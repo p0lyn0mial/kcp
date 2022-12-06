@@ -119,7 +119,7 @@ func (b *BindOptions) Run(ctx context.Context) error {
 			Reference: apisv1alpha1.ExportReference{
 				Cluster: &apisv1alpha1.ClusterExportReference{
 					// TODO(sttts): this will break for real paths. We probably only support this when the user has read access to the export workspace.
-					Identifier: tenancy.Cluster(workspacePath.String()),
+					Identifier: logicalcluster.Name(workspacePath.String()),
 					ExportName: apiExportName,
 				},
 			},

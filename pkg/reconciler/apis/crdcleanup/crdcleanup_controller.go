@@ -59,7 +59,7 @@ func NewController(
 
 	c := &controller{
 		queue: queue,
-		getCRD: func(clusterName tenancy.Cluster, name string) (*apiextensionsv1.CustomResourceDefinition, error) {
+		getCRD: func(clusterName logicalcluster.Name, name string) (*apiextensionsv1.CustomResourceDefinition, error) {
 			return crdInformer.Lister().Cluster(clusterName.Path()).Get(name)
 		},
 		getAPIBindingsByBoundResourceUID: func(name string) ([]*apisv1alpha1.APIBinding, error) {
@@ -117,7 +117,7 @@ func NewController(
 type controller struct {
 	queue workqueue.RateLimitingInterface
 
-	getCRD                           func(clusterName tenancy.Cluster, name string) (*apiextensionsv1.CustomResourceDefinition, error)
+	getCRD                           func(clusterName logicalcluster.Name, name string) (*apiextensionsv1.CustomResourceDefinition, error)
 	getAPIBindingsByBoundResourceUID func(name string) ([]*apisv1alpha1.APIBinding, error)
 	deleteCRD                        func(ctx context.Context, name string) error
 }
@@ -223,7 +223,7 @@ func (c *controller) process(ctx context.Context, key string) error {
 	if err != nil {
 		return err
 	}
-	clusterName := tenancy.Cluster(cluster.String()) // TODO: remove this when SplitMetaClusterNamespaceKey returns a tenancy.Cluster
+	clusterName := logicalcluster.Name(cluster.String()) // TODO: remove this when SplitMetaClusterNamespaceKey returns a logicalcluster.Name
 
 	obj, err := c.getCRD(clusterName, name)
 	if err != nil {

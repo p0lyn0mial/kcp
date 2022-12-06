@@ -118,7 +118,7 @@ type ClusterExportReference struct {
 	// If identifier and path are unset, the cluster of the APIBinding is used.
 	//
 	// +optional
-	Identifier tenancy.Cluster `json:"identifier,omitempty"`
+	Identifier logicalcluster.Name `json:"identifier,omitempty"`
 
 	// exportName is the name of the APIExport that describes the API.
 	//

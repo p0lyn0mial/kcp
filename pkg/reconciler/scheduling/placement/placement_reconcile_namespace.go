@@ -31,7 +31,7 @@ import (
 // placementNamespaceReconciler checks the namespaces bound to this placement and set the phase.
 // If there are at least one namespace bound to this placement, the placement is in bound state.
 type placementNamespaceReconciler struct {
-	listNamespacesWithAnnotation func(clusterName tenancy.Cluster) ([]*corev1.Namespace, error)
+	listNamespacesWithAnnotation func(clusterName logicalcluster.Name) ([]*corev1.Namespace, error)
 }
 
 func (r *placementNamespaceReconciler) reconcile(ctx context.Context, placement *schedulingv1alpha1.Placement) (reconcileStatus, *schedulingv1alpha1.Placement, error) {

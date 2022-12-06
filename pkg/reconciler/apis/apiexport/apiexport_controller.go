@@ -76,7 +76,7 @@ func NewController(
 		apiExportLister:   apiExportInformer.Lister(),
 		apiExportIndexer:  apiExportInformer.Informer().GetIndexer(),
 		kubeClusterClient: kubeClusterClient,
-		getNamespace: func(clusterName tenancy.Cluster, name string) (*corev1.Namespace, error) {
+		getNamespace: func(clusterName logicalcluster.Name, name string) (*corev1.Namespace, error) {
 			return namespaceInformer.Lister().Cluster(clusterName.Path()).Get(name)
 		},
 		createNamespace: func(ctx context.Context, clusterName logicalcluster.Path, ns *corev1.Namespace) error {
@@ -89,7 +89,7 @@ func NewController(
 			_, err := kubeClusterClient.Cluster(clusterName).CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 			return err
 		},
-		getAPIBindingsForAPIExport: func(clusterName tenancy.Cluster, name string) ([]interface{}, error) {
+		getAPIBindingsForAPIExport: func(clusterName logicalcluster.Name, name string) ([]interface{}, error) {
 			clusterPathAndName := indexers.ClusterAndAPIExportName(clusterName, name)
 			return apiBindingInformer.Informer().GetIndexer().ByIndex(indexers.APIBindingsByAPIExport, clusterPathAndName)
 		},
@@ -188,16 +188,16 @@ type controller struct {
 
 	kubeClusterClient kcpkubernetesclientset.ClusterInterface
 
-	getNamespace    func(clusterName tenancy.Cluster, name string) (*corev1.Namespace, error)
+	getNamespace    func(clusterName logicalcluster.Name, name string) (*corev1.Namespace, error)
 	createNamespace func(ctx context.Context, clusterName logicalcluster.Path, ns *corev1.Namespace) error
 
 	secretLister    corev1listers.SecretClusterLister
 	secretNamespace string
 
-	getSecret    func(ctx context.Context, clusterName tenancy.Cluster, ns, name string) (*corev1.Secret, error)
+	getSecret    func(ctx context.Context, clusterName logicalcluster.Name, ns, name string) (*corev1.Secret, error)
 	createSecret func(ctx context.Context, clusterName logicalcluster.Path, secret *corev1.Secret) error
 
-	getAPIBindingsForAPIExport func(clusterName tenancy.Cluster, name string) ([]interface{}, error)
+	getAPIBindingsForAPIExport func(clusterName logicalcluster.Name, name string) ([]interface{}, error)
 
 	listClusterWorkspaceShards func() ([]*tenancyv1alpha1.ClusterWorkspaceShard, error)
 	commit                     CommitFunc
@@ -369,7 +369,7 @@ func (c *controller) process(ctx context.Context, key string) error {
 	return utilerrors.NewAggregate(errs)
 }
 
-func (c *controller) readThroughGetSecret(ctx context.Context, clusterName tenancy.Cluster, ns, name string) (*corev1.Secret, error) {
+func (c *controller) readThroughGetSecret(ctx context.Context, clusterName logicalcluster.Name, ns, name string) (*corev1.Secret, error) {
 	secret, err := c.secretLister.Cluster(clusterName.Path()).Secrets(ns).Get(name)
 	if err == nil {
 		return secret, nil

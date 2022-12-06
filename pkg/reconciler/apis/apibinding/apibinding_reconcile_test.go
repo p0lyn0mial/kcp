@@ -73,7 +73,7 @@ var (
 	binding = unbound.DeepCopy().WithPhase(apisv1alpha1.APIBindingPhaseBinding)
 
 	rebinding = binding.DeepCopy().
-			WithBoundResources(
+		WithBoundResources(
 			new(boundAPIResourceBuilder).
 				WithGroupResource("kcp.dev", "widgets").
 				WithSchema("today.widgets.kcp.dev", "todaywidgetsuid").
@@ -97,10 +97,10 @@ var (
 		)
 
 	conflicting = unbound.DeepCopy().
-			WithName("conflicting").
-			WithPhase(apisv1alpha1.APIBindingPhaseBound).
-			WithExportReference("org:some-workspace", "conflict").
-			WithBoundResources(
+		WithName("conflicting").
+		WithPhase(apisv1alpha1.APIBindingPhaseBound).
+		WithExportReference("org:some-workspace", "conflict").
+		WithBoundResources(
 			new(boundAPIResourceBuilder).
 				WithGroupResource("kcp.dev", "widgets").
 				WithSchema("another.widgets.kcp.dev", "anotherwidgetsuid").
@@ -435,14 +435,14 @@ func TestReconcileBinding(t *testing.T) {
 			}
 
 			c := &controller{
-				listAPIBindings: func(clusterName tenancy.Cluster) ([]*apisv1alpha1.APIBinding, error) {
+				listAPIBindings: func(clusterName logicalcluster.Name) ([]*apisv1alpha1.APIBinding, error) {
 					return tc.existingAPIBindings, nil
 				},
-				getAPIExport: func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIExport, error) {
+				getAPIExport: func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIExport, error) {
 					require.Equal(t, "org:some-workspace", clusterName.String())
 					return apiExports[name], tc.getAPIExportError
 				},
-				getAPIResourceSchema: func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error) {
+				getAPIResourceSchema: func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIResourceSchema, error) {
 					if tc.getAPIResourceSchemaError != nil {
 						return nil, tc.getAPIResourceSchemaError
 					}
@@ -456,7 +456,7 @@ func TestReconcileBinding(t *testing.T) {
 
 					return schema, nil
 				},
-				getCRD: func(clusterName tenancy.Cluster, name string) (*apiextensionsv1.CustomResourceDefinition, error) {
+				getCRD: func(clusterName logicalcluster.Name, name string) (*apiextensionsv1.CustomResourceDefinition, error) {
 					require.Equal(t, ShadowWorkspaceName, clusterName)
 
 					if tc.getCRDError != nil {
@@ -493,7 +493,7 @@ func TestReconcileBinding(t *testing.T) {
 
 					return crd, nil
 				},
-				listCRDs: func(clusterName tenancy.Cluster) ([]*apiextensionsv1.CustomResourceDefinition, error) {
+				listCRDs: func(clusterName logicalcluster.Name) ([]*apiextensionsv1.CustomResourceDefinition, error) {
 					return nil, nil
 				},
 				createCRD: func(ctx context.Context, clusterName logicalcluster.Path, crd *apiextensionsv1.CustomResourceDefinition) (*apiextensionsv1.CustomResourceDefinition, error) {
@@ -873,7 +873,7 @@ func (b *bindingBuilder) WithoutWorkspaceReference() *bindingBuilder {
 	return b
 }
 
-func (b *bindingBuilder) WithExportReference(cluster tenancy.Cluster, exportName string) *bindingBuilder {
+func (b *bindingBuilder) WithExportReference(cluster logicalcluster.Name, exportName string) *bindingBuilder {
 	b.Spec.Reference.Cluster = &apisv1alpha1.ClusterExportReference{
 		Identifier: cluster,
 		ExportName: exportName,

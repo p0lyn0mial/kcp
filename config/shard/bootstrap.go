@@ -33,7 +33,7 @@ import (
 var fs embed.FS
 
 // SystemShardCluster is the name of a logical cluster on every shard (including the root shard) that holds essential system resources (like the root APIs).
-var SystemShardCluster = tenancy.Cluster("system:shard")
+var SystemShardCluster = logicalcluster.Name("system:shard")
 
 // Bootstrap creates resources required for a shard.
 // As of today creating API bindings for the root APIs and the default ns is enough.

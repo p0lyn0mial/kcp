@@ -37,11 +37,11 @@ func (u byUID) Less(i, j int) bool { return u[i].UID < u[j].UID }
 func (u byUID) Swap(i, j int)      { u[i], u[j] = u[j], u[i] }
 
 type conflictChecker struct {
-	listAPIBindings      func(clusterName tenancy.Cluster) ([]*apisv1alpha1.APIBinding, error)
-	getAPIExport         func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIExport, error)
-	getAPIResourceSchema func(clusterName tenancy.Cluster, name string) (*apisv1alpha1.APIResourceSchema, error)
-	getCRD               func(clusterName tenancy.Cluster, name string) (*apiextensionsv1.CustomResourceDefinition, error)
-	listCRDs             func(clusterName tenancy.Cluster) ([]*apiextensionsv1.CustomResourceDefinition, error)
+	listAPIBindings      func(clusterName logicalcluster.Name) ([]*apisv1alpha1.APIBinding, error)
+	getAPIExport         func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIExport, error)
+	getAPIResourceSchema func(clusterName logicalcluster.Name, name string) (*apisv1alpha1.APIResourceSchema, error)
+	getCRD               func(clusterName logicalcluster.Name, name string) (*apiextensionsv1.CustomResourceDefinition, error)
+	listCRDs             func(clusterName logicalcluster.Name) ([]*apiextensionsv1.CustomResourceDefinition, error)
 
 	boundCRDs    []*apiextensionsv1.CustomResourceDefinition
 	crdToBinding map[string]*apisv1alpha1.APIBinding
