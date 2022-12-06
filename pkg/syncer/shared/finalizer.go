@@ -19,7 +19,6 @@ package shared
 import (
 	"context"
 	"fmt"
-
 	kcpdynamic "github.com/kcp-dev/client-go/dynamic"
 	kcpkubernetesinformers "github.com/kcp-dev/client-go/informers"
 	"github.com/kcp-dev/logicalcluster/v3"
@@ -39,9 +38,13 @@ const (
 	SyncerFinalizerNamePrefix = "workload.kcp.dev/syncer-"
 )
 
-func EnsureUpstreamFinalizerRemoved(ctx context.Context, gvr schema.GroupVersionResource, upstreamInformer kcpkubernetesinformers.GenericClusterInformer, upstreamClient kcpdynamic.ClusterInterface, upstreamNamespace, syncTargetKey string, logicalClusterName logicalcluster.Path, resourceName string) error {
+func EnsureUpstreamFinalizerRemoved(ctx context.Context, gvr schema.GroupVersionResource, upstreamInformer kcpkubernetesinformers.GenericClusterInformer, upstreamClient kcpdynamic.ClusterInterface, upstreamNamespace, syncTargetKey string, cluster logicalcluster.Path, resourceName string) error {
+	clusterName, ok := cluster.Name()
+	if !ok {
+		return fmt.Errorf("unable to extract logicalcluster.Name from the given logicalcluster.Path: %s", cluster.String())
+	}
 	logger := klog.FromContext(ctx)
-	upstreamObjFromLister, err := upstreamInformer.Lister().ByCluster(logicalClusterName).ByNamespace(upstreamNamespace).Get(resourceName)
+	upstreamObjFromLister, err := upstreamInformer.Lister().ByCluster(clusterName).ByNamespace(upstreamNamespace).Get(resourceName)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
@@ -89,9 +92,9 @@ func EnsureUpstreamFinalizerRemoved(ctx context.Context, gvr schema.GroupVersion
 	// - End of block to be removed once the virtual workspace syncer is integrated -
 
 	if upstreamNamespace != "" {
-		_, err = upstreamClient.Cluster(logicalClusterName).Resource(gvr).Namespace(upstreamObj.GetNamespace()).Update(ctx, upstreamObj, metav1.UpdateOptions{})
+		_, err = upstreamClient.Cluster(cluster).Resource(gvr).Namespace(upstreamObj.GetNamespace()).Update(ctx, upstreamObj, metav1.UpdateOptions{})
 	} else {
-		_, err = upstreamClient.Cluster(logicalClusterName).Resource(gvr).Update(ctx, upstreamObj, metav1.UpdateOptions{})
+		_, err = upstreamClient.Cluster(cluster).Resource(gvr).Update(ctx, upstreamObj, metav1.UpdateOptions{})
 	}
 
 	if err != nil {
