@@ -83,7 +83,7 @@ func WithAuditEventClusterAnnotation(handler http.Handler) http.HandlerFunc {
 // If the path doesn't contain the cluster name then a default "system:admin" name is assigned.
 func WithClusterScope(apiHandler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		var clusterName logicalcluster.Path
+		var clusterName logicalcluster.Name
 		if path := req.URL.Path; strings.HasPrefix(path, "/clusters/") {
 			path = strings.TrimPrefix(path, "/clusters/")
 
