@@ -17,6 +17,7 @@ limitations under the License.
 package initializers
 
 import (
+	kcpkubernetesinformers "github.com/kcp-dev/client-go/informers"
 	kcpkubernetesclientset "github.com/kcp-dev/client-go/kubernetes"
 
 	"k8s.io/apiserver/pkg/admission"
@@ -25,7 +26,6 @@ import (
 
 	kcpclientset "github.com/kcp-dev/kcp/pkg/client/clientset/versioned/cluster"
 	kcpinformers "github.com/kcp-dev/kcp/pkg/client/informers/externalversions"
-	kcpkubernetesinformers "github.com/kcp-dev/client-go/informers"
 )
 
 // NewKcpInformersInitializer returns an admission plugin initializer that injects
